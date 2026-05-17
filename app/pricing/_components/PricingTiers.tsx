@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { Check, Zap } from "lucide-react";
 import Link from "next/link";
 
+const SUCCESS_URL = "https://sorkcloud.space/payment-success";
+
 interface Plan {
   name: string;
   monthlyPrice: number;
@@ -14,7 +16,7 @@ interface Plan {
   keys: number;
   requests: string;
   highlight: boolean;
-  paymentLink?: { monthly: string; annual: string };
+  skydoLink?: string;
 }
 
 const PLANS: Plan[] = [
@@ -50,7 +52,7 @@ const PLANS: Plan[] = [
     keys: 5,
     requests: "Unlimited",
     highlight: true,
-    paymentLink: { monthly: "#", annual: "#" },
+    skydoLink: "https://dashboard.skydo.com/pay/pyl_DvhKKI",
   },
   {
     name: "Pro Plus",
@@ -67,7 +69,7 @@ const PLANS: Plan[] = [
     keys: 20,
     requests: "Unlimited",
     highlight: false,
-    paymentLink: { monthly: "#", annual: "#" },
+    skydoLink: "https://dashboard.skydo.com/pay/pyl_4Cfxc9",
   },
 ];
 
@@ -99,75 +101,87 @@ export default function PricingTiers() {
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        {PLANS.map((plan, i) => (
-          <motion.div
-            key={plan.name}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className={`rounded-2xl border p-6 flex flex-col relative ${
-              plan.highlight
-                ? "border-accent/40 bg-accent/5 glow-cyan"
-                : "border-border bg-[#0f0f0f]"
-            }`}
-          >
-            {plan.highlight && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="px-3 py-1 bg-accent text-bg text-xs font-bold rounded-full flex items-center gap-1">
-                  <Zap className="w-3 h-3" /> Most popular
-                </span>
-              </div>
-            )}
+        {PLANS.map((plan, i) => {
+          const skydoUrl = plan.skydoLink
+            ? `${plan.skydoLink}?redirect_url=${encodeURIComponent(`${SUCCESS_URL}?plan=${plan.name}`)}`
+            : undefined;
 
-            <div className="mb-6">
-              <h3 className="font-bold text-lg mb-1">{plan.name}</h3>
-              <p className="text-muted text-sm mb-4">{plan.description}</p>
-              <div className="flex items-end gap-1">
-                <span className="text-4xl font-bold">
-                  ${annual ? plan.annualPrice : plan.monthlyPrice}
-                </span>
-                {plan.monthlyPrice > 0 && (
-                  <span className="text-muted text-sm mb-1">/mo</span>
+          return (
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className={`rounded-2xl border p-6 flex flex-col relative ${
+                plan.highlight
+                  ? "border-accent/40 bg-accent/5 glow-cyan"
+                  : "border-border bg-[#0f0f0f]"
+              }`}
+            >
+              {plan.highlight && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="px-3 py-1 bg-accent text-bg text-xs font-bold rounded-full flex items-center gap-1">
+                    <Zap className="w-3 h-3" /> Most popular
+                  </span>
+                </div>
+              )}
+
+              <div className="mb-6">
+                <h3 className="font-bold text-lg mb-1">{plan.name}</h3>
+                <p className="text-muted text-sm mb-4">{plan.description}</p>
+                <div className="flex items-end gap-1">
+                  <span className="text-4xl font-bold">
+                    ${annual ? plan.annualPrice : plan.monthlyPrice}
+                  </span>
+                  {plan.monthlyPrice > 0 && (
+                    <span className="text-muted text-sm mb-1">/mo</span>
+                  )}
+                </div>
+                {annual && plan.monthlyPrice > 0 && (
+                  <p className="text-xs text-muted mt-1">
+                    billed ${plan.annualPrice * 12}/year
+                  </p>
                 )}
               </div>
-              {annual && plan.monthlyPrice > 0 && (
-                <p className="text-xs text-muted mt-1">
-                  billed ${plan.annualPrice * 12}/year
-                </p>
+
+              <ul className="space-y-2.5 flex-1 mb-6">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+                    <span className="text-muted">{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {plan.monthlyPrice === 0 ? (
+                <Link
+                  href="/sign-up"
+                  className="w-full py-2.5 border border-border rounded-xl text-sm font-medium text-center hover:border-accent/40 hover:text-accent transition-colors"
+                >
+                  Get started free
+                </Link>
+              ) : (
+                <a
+                  href={skydoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-full py-2.5 rounded-xl text-sm font-semibold text-center transition-colors ${
+                    plan.highlight
+                      ? "bg-accent text-bg hover:bg-accent/90"
+                      : "border border-accent/30 text-accent hover:bg-accent/10"
+                  }`}
+                >
+                  Get {plan.name}
+                </a>
               )}
-            </div>
-
-            <ul className="space-y-2.5 flex-1 mb-6">
-              {plan.features.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm">
-                  <Check className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-muted">{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            {plan.monthlyPrice === 0 ? (
-              <Link
-                href="/sign-up"
-                className="w-full py-2.5 border border-border rounded-xl text-sm font-medium text-center hover:border-accent/40 hover:text-accent transition-colors"
-              >
-                Get started free
-              </Link>
-            ) : (
-              <a
-                href={annual ? plan.paymentLink?.annual : plan.paymentLink?.monthly}
-                className={`w-full py-2.5 rounded-xl text-sm font-semibold text-center transition-colors ${
-                  plan.highlight
-                    ? "bg-accent text-bg hover:bg-accent/90"
-                    : "border border-accent/30 text-accent hover:bg-accent/10"
-                }`}
-              >
-                Get {plan.name}
-              </a>
-            )}
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
+
+      <p className="text-center text-xs text-muted mt-8">
+        Payments processed securely via Skydo · Plan activated within 24h · Cancel anytime
+      </p>
     </div>
   );
 }
