@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User, Loader2, Paperclip, X, FileCode, FolderOpen, AtSign } from "lucide-react";
+import { Send, Bot, User, Loader2, Paperclip, X, FileCode, FolderOpen, AtSign, Cpu } from "lucide-react";
 import { apiPost } from "@/lib/api";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
@@ -23,6 +25,9 @@ interface ChatResponse {
   reply: string;
   sessionId: string;
   byokIntent?: boolean;
+  modelSwitched?: boolean;
+  activeModel?: string;
+  filesReceived?: number;
 }
 
 const MAX_FILE_SIZE = 100_000; // 100KB per file
@@ -45,6 +50,7 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>();
+  const [activeModel, setActiveModel] = useState("llama-3.3-70b-versatile");
   const [attachments, setAttachments] = useState<AttachedFile[]>(() =>
     preloadedFile
       ? [{ name: preloadedFile.name, content: preloadedFile.content, type: "file" as const, size: preloadedFile.content.length }]
@@ -136,6 +142,7 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
         attachedFiles: currentAttachments.map((f) => ({ name: f.name, size: f.size })),
       });
       setSessionId(res.sessionId);
+      if (res.activeModel) setActiveModel(res.activeModel);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: res.reply, byokIntent: res.byokIntent },
@@ -181,9 +188,13 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
         </div>
         <div className="ml-auto flex items-center gap-3">
           <span className="text-xs text-muted hidden sm:block">📎 drag files here</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border bg-[#141414]">
+            <Cpu className="w-3 h-3 text-accent" />
+            <span className="text-xs text-accent font-mono">{activeModel.replace("-versatile", "").replace("-instant", "")}</span>
+          </div>
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-            <span className="text-xs text-muted">Groq + Nemotron</span>
+            <span className="text-xs text-muted">live</span>
           </div>
         </div>
       </div>
@@ -244,13 +255,23 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
                   </div>
                 )}
                 <div
-                  className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`rounded-2xl px-4 py-3 ${
                     msg.role === "assistant"
                       ? "bg-[#151515] border border-border text-fg"
                       : "bg-accent/10 border border-accent/20 text-fg"
                   }`}
                 >
-                  {msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}
+                  {msg.role === "assistant" ? (
+                    <div className="chat-prose">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed">
+                      {msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}
+                    </p>
+                  )}
                   {msg.byokIntent && (
                     <div className="mt-2 pt-2 border-t border-border">
                       <p className="text-xs text-accent">→ Use the BYOK Manager below to add your API key</p>
