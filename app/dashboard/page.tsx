@@ -6,11 +6,27 @@ import ByokManager from "./_components/ByokManager";
 import ChatSection from "./_components/ChatSection";
 import AgentPipeline from "./_components/AgentPipeline";
 
-export default async function DashboardPage() {
+interface Props {
+  searchParams: Promise<{ file?: string; code?: string; key?: string }>;
+}
+
+export default async function DashboardPage({ searchParams }: Props) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
   const user = await currentUser();
+  const params = await searchParams;
+
+  // Decode file sent via sork send <file>
+  let preloadedFile: { name: string; content: string } | undefined;
+  if (params.file && params.code) {
+    try {
+      const content = Buffer.from(params.code, "base64").toString("utf-8");
+      preloadedFile = { name: params.file, content };
+    } catch {
+      // ignore bad base64
+    }
+  }
 
   return (
     <div className="min-h-screen bg-bg text-fg">
@@ -24,7 +40,7 @@ export default async function DashboardPage() {
             <span className="font-bold">SORK Cloud</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-muted text-sm">{user?.emailAddresses[0]?.emailAddress}</span>
+            <span className="text-muted text-sm hidden sm:block">{user?.emailAddresses[0]?.emailAddress}</span>
           </div>
         </div>
       </header>
@@ -36,7 +52,11 @@ export default async function DashboardPage() {
             <h1 className="text-2xl font-bold">
               Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
             </h1>
-            <p className="text-muted text-sm mt-1">Your security pipeline is ready.</p>
+            <p className="text-muted text-sm mt-1">
+              {preloadedFile
+                ? `File received from VS Code: @${preloadedFile.name}`
+                : "Your security pipeline is ready."}
+            </p>
           </div>
           <UsageBar clerkId={userId} />
         </div>
@@ -46,9 +66,9 @@ export default async function DashboardPage() {
 
         {/* Main grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Chat with SORK */}
+          {/* Chat with SORK — full width, passes preloaded file */}
           <div className="lg:col-span-2">
-            <ChatSection clerkId={userId} />
+            <ChatSection clerkId={userId} preloadedFile={preloadedFile} />
           </div>
 
           {/* BYOK Manager */}
