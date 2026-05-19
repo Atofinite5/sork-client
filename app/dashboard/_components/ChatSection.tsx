@@ -43,8 +43,8 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
     {
       role: "assistant",
       content: preloadedFile
-        ? `File received from VS Code: \`@${preloadedFile.name}\` (${(preloadedFile.content.length / 1024).toFixed(1)}KB)\n\nI've attached it below. Hit send to run the full security pipeline — Nemotron safety check → Triage → Fix → Verify.`
-        : "Hey! I'm SORK. You can:\n\n• **Chat** — ask me to configure an API endpoint\n• **Attach files** — click 📎 or drag & drop code files\n• **@mention** — type @filename to reference attached files\n• **VS Code** — run `sork hook vscode` then use Tasks panel\n\nHow can I help?",
+        ? `File received from VS Code: \`@${preloadedFile.name}\` (${(preloadedFile.content.length / 1024).toFixed(1)} KB)\n\nAttached and ready. Hit **Send** to run the full pipeline — Nemotron safety → Triage → Fix → Verify.`
+        : `Hey! I'm **SORK** — your AI security engineer.\n\nHere's what I can do:\n\n- **Scan code** — paste or attach a file and I'll triage every vulnerability\n- **Fix issues** — I'll generate a minimal patch and verify it\n- **Configure endpoints** — say *"add my Groq key"* and I'll walk you through BYOK setup\n- **Switch models** — say *"use llama-3.1-8b"* to change the triage engine\n- **VS Code** — run \`sork hook vscode\` to send files straight from your editor\n\nHow can I help?`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -263,12 +263,25 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
                 >
                   {msg.role === "assistant" ? (
                     <div className="chat-prose">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          code: ({ children, className }) =>
+                            className ? (
+                              <pre className="bg-[#111] border border-[#262626] rounded-lg p-3 overflow-x-auto my-2">
+                                <code className="text-[#e2e8f0] text-xs font-mono leading-relaxed">{children}</code>
+                              </pre>
+                            ) : (
+                              <code className="bg-[#1a1a1a] border border-[#2a2a2a] rounded px-1.5 py-0.5 text-accent text-[0.82em] font-mono">{children}</code>
+                            ),
+                        }}
+                      >
                         {msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <p className="text-sm leading-relaxed">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}
                     </p>
                   )}
