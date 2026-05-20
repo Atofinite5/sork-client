@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "pk_test_placeholder"}
       appearance={{
         variables: { colorPrimary: "#22d3ee", colorBackground: "#141414", colorText: "#fafafa" },
       }}
