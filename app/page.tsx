@@ -3,257 +3,339 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs";
-import { Shield, Zap, Brain, Key, ArrowRight, Terminal, Lock, Cpu } from "lucide-react";
+import { ArrowRight, Shield, Brain, Zap, Lock, Key } from "lucide-react";
+import { useEffect, useState } from "react";
 
-const PIPELINE_STEPS = [
-  { icon: Shield, label: "Nemotron Safety", color: "#f59e0b", desc: "Content safety gate" },
-  { icon: Brain, label: "Triage Agent", color: "#22d3ee", desc: "Vulnerability detection" },
-  { icon: Zap, label: "Fix Agent", color: "#22c55e", desc: "Automated remediation" },
-  { icon: Lock, label: "Verify Agent", color: "#a855f7", desc: "Fix validation" },
+// ── Animated terminal lines ───────────────────────────────
+const TERMINAL_LINES = [
+  { text: "Scanning project...",       color: "#8a9ba8", delay: 0 },
+  { text: "-> Triage: High Priority",  color: "#ffcb8e", delay: 0.8 },
+  { text: "-> Fix: Patch generated",   color: "#a0e8ef", delay: 1.6 },
+  { text: "-> Verify: Fix validated",  color: "#aadfb4", delay: 2.4 },
+  { text: "-> Status: Clean ✓",        color: "#aadfb4", delay: 3.2 },
 ];
 
-const PROVIDERS = ["Groq", "Claude", "NVIDIA", "OpenAI", "Cohere", "Custom"];
+function Terminal() {
+  const [visible, setVisible] = useState(0);
+  useEffect(() => {
+    const timers = TERMINAL_LINES.map((l, i) =>
+      setTimeout(() => setVisible(i + 1), l.delay * 1000 + 500)
+    );
+    const reset = setInterval(() => setVisible(0), 6000);
+    return () => { timers.forEach(clearTimeout); clearInterval(reset); };
+  }, []);
+
+  return (
+    <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-2xl overflow-hidden w-72 shadow-2xl">
+      {/* Title bar */}
+      <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#1a1a1a]">
+        <span className="w-2.5 h-2.5 rounded-full bg-[#ffadad]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#ffcb8e]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#aadfb4]" />
+        <span className="ml-2 text-[11px] text-[#3d444c] font-mono">Terminal</span>
+      </div>
+      <div className="px-4 py-4 font-mono text-xs space-y-1.5 min-h-[110px]">
+        {TERMINAL_LINES.slice(0, visible).map((line, i) => (
+          <motion.div
+            key={`${i}-${visible}`}
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ color: line.color }}
+          >
+            {line.text}
+          </motion.div>
+        ))}
+        {visible < TERMINAL_LINES.length && (
+          <motion.span
+            animate={{ opacity: [1, 0, 1] }}
+            transition={{ duration: 0.8, repeat: Infinity }}
+            className="inline-block w-1.5 h-3 bg-[#a0e8ef]"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Circuit board SVG pattern ─────────────────────────────
+function CircuitPattern({ side }: { side: "left" | "right" }) {
+  return (
+    <svg
+      className="absolute top-0 h-full w-64 opacity-[0.07] pointer-events-none"
+      style={{ [side]: 0 }}
+      viewBox="0 0 256 600"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <line x1="40" y1="0" x2="40" y2="600" stroke="#22d3ee" strokeWidth="1" />
+      <line x1="80" y1="0" x2="80" y2="600" stroke="#22d3ee" strokeWidth="0.5" />
+      <line x1="120" y1="0" x2="120" y2="600" stroke="#22d3ee" strokeWidth="1" />
+      <line x1="0" y1="100" x2="256" y2="100" stroke="#22d3ee" strokeWidth="0.5" />
+      <line x1="0" y1="200" x2="256" y2="200" stroke="#22d3ee" strokeWidth="1" />
+      <line x1="0" y1="320" x2="256" y2="320" stroke="#22d3ee" strokeWidth="0.5" />
+      <line x1="0" y1="440" x2="256" y2="440" stroke="#22d3ee" strokeWidth="1" />
+      <circle cx="40" cy="100" r="4" fill="#22d3ee" />
+      <circle cx="40" cy="200" r="3" fill="#22d3ee" />
+      <circle cx="80" cy="320" r="4" fill="#22d3ee" />
+      <circle cx="120" cy="100" r="3" fill="#22d3ee" />
+      <circle cx="120" cy="440" r="4" fill="#22d3ee" />
+      <circle cx="40" cy="440" r="3" fill="#22d3ee" />
+      <line x1="40" y1="100" x2="80" y2="100" stroke="#22d3ee" strokeWidth="1" />
+      <line x1="80" y1="100" x2="80" y2="200" stroke="#22d3ee" strokeWidth="1" />
+      <line x1="80" y1="200" x2="120" y2="200" stroke="#22d3ee" strokeWidth="1" />
+      <line x1="40" y1="320" x2="120" y2="320" stroke="#22d3ee" strokeWidth="1" />
+      <line x1="40" y1="320" x2="40" y2="440" stroke="#22d3ee" strokeWidth="1" />
+      <circle cx="40" cy="100" r="2" fill="#22d3ee" />
+      <circle cx="120" cy="200" r="2" fill="#22d3ee" />
+      <line x1="160" y1="150" x2="200" y2="150" stroke="#22d3ee" strokeWidth="0.5" />
+      <line x1="200" y1="150" x2="200" y2="260" stroke="#22d3ee" strokeWidth="0.5" />
+      <circle cx="200" cy="260" r="3" fill="#22d3ee" />
+      <line x1="160" y1="380" x2="240" y2="380" stroke="#22d3ee" strokeWidth="0.5" />
+      <circle cx="160" cy="380" r="2" fill="#22d3ee" />
+    </svg>
+  );
+}
+
+const HOW_IT_WORKS = [
+  {
+    icon: Brain,
+    label: "Triage",
+    title: "Intelligent Detection",
+    desc: "Detects and prioritizes threats instantly.",
+    color: "#a0e8ef",
+  },
+  {
+    icon: Zap,
+    label: "Fix",
+    title: "Context-Aware Patches",
+    desc: "Generates secure, tested fixes.",
+    color: "#aadfb4",
+  },
+  {
+    icon: Shield,
+    label: "Verify",
+    title: "Automated Auditing",
+    desc: "Validates patches before deployment.",
+    color: "#d4bdff",
+  },
+];
+
+const CORE_FEATURES = [
+  {
+    icon: "G",
+    label: "Groq Acceleration",
+    desc: "Sub-second inference.",
+    color: "#ffcb8e",
+  },
+  {
+    icon: "N",
+    label: "Nemotron Guardrails",
+    desc: "Safety and compliance.",
+    color: "#a0e8ef",
+  },
+  {
+    icon: Key,
+    label: "BYO Key/Infra",
+    desc: "Data sovereignty.",
+    color: "#ffadad",
+  },
+];
 
 export default function HomePage() {
   const { isSignedIn } = useUser();
 
   return (
-    <div className="min-h-screen bg-bg text-fg overflow-x-hidden">
-      {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 border-b border-border bg-bg/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2"
-          >
-            <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center">
-              <Shield className="w-4 h-4 text-accent" />
-            </div>
-            <span className="font-bold text-lg tracking-tight">SORK Cloud</span>
-          </motion.div>
+    <div className="min-h-screen bg-[#0a0a0a] text-fg overflow-x-hidden">
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-4"
-          >
-            <Link href="/pricing" className="text-muted hover:text-fg text-sm transition-colors">
-              Pricing
-            </Link>
+      {/* ── Nav ── */}
+      <nav className="fixed top-0 w-full z-50 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-[#111]">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+              <Shield className="w-3.5 h-3.5 text-accent" />
+            </div>
+            <span className="font-semibold text-sm tracking-tight">SORK Cloud</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/pricing" className="text-xs text-muted hover:text-fg transition-colors hidden sm:block">Pricing</Link>
             {isSignedIn ? (
-              <Link
-                href="/dashboard"
-                className="px-4 py-2 bg-accent text-bg text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
-              >
+              <Link href="/dashboard"
+                className="px-3.5 py-1.5 bg-accent text-bg text-xs font-semibold rounded-lg hover:bg-accent/90 transition-colors">
                 Dashboard
               </Link>
             ) : (
               <>
                 <SignInButton mode="modal">
-                  <button className="text-muted hover:text-fg text-sm transition-colors">Sign in</button>
+                  <button className="text-xs text-muted hover:text-fg transition-colors">Sign in</button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button className="px-4 py-2 bg-accent text-bg text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors">
+                  <button className="px-3.5 py-1.5 bg-accent text-bg text-xs font-semibold rounded-lg hover:bg-accent/90 transition-colors">
                     Get started
                   </button>
                 </SignUpButton>
               </>
             )}
-          </motion.div>
+          </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="pt-40 pb-24 px-6 max-w-6xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5 text-accent text-xs font-medium mb-8">
+      {/* ── Hero ── */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+
+        {/* Circuit patterns */}
+        <CircuitPattern side="left" />
+        <CircuitPattern side="right" />
+
+        {/* Radial glow */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[600px] h-[600px] rounded-full opacity-[0.04]"
+            style={{ background: "radial-gradient(circle, #22d3ee 0%, transparent 70%)" }} />
+        </div>
+
+        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto pt-20">
+
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 text-accent text-xs font-medium mb-10"
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
             Multi-agent security pipeline
-          </div>
+          </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
-            Security that
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6"
+          >
+            <span className="text-[#dce1e7]">Security that</span>
             <br />
             <span className="text-accent">thinks for itself</span>
-          </h1>
+          </motion.h1>
 
-          <p className="text-muted text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Three AI agents — triage, fix, verify — protected by Nemotron safety and powered by Groq.
-            Bring any API key. Run anywhere.
-          </p>
+          {/* Sub */}
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-[#5c6672] text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed"
+          >
+            Three AI agents — triage, fix, verify — protected by Nemotron safety
+            and powered by Groq. Bring any API key. Run anywhere.
+          </motion.p>
 
-          <div className="flex items-center justify-center gap-4 flex-wrap">
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center justify-center gap-4"
+          >
             {isSignedIn ? (
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-bg font-semibold rounded-xl hover:bg-accent/90 transition-all glow-cyan"
-              >
+              <Link href="/dashboard"
+                className="inline-flex items-center gap-2 px-6 py-2.5 border border-accent/40 text-accent text-sm font-medium rounded-xl hover:bg-accent/10 transition-colors">
                 Open Dashboard <ArrowRight className="w-4 h-4" />
               </Link>
             ) : (
               <>
                 <SignUpButton mode="modal">
-                  <button className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-bg font-semibold rounded-xl hover:bg-accent/90 transition-all glow-cyan">
-                    Start free <ArrowRight className="w-4 h-4" />
+                  <button className="inline-flex items-center gap-2 px-6 py-2.5 border border-accent/40 text-accent text-sm font-medium rounded-xl hover:bg-accent/10 transition-colors">
+                    Open Dashboard <ArrowRight className="w-4 h-4" />
                   </button>
                 </SignUpButton>
-                <Link
-                  href="/pricing"
-                  className="px-6 py-3 border border-border text-fg font-medium rounded-xl hover:border-accent/40 transition-colors"
-                >
-                  View pricing
-                </Link>
               </>
             )}
-          </div>
-        </motion.div>
+          </motion.div>
+
+          {/* Terminal widget */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex justify-end mt-16 pr-4 md:pr-0"
+          >
+            <Terminal />
+          </motion.div>
+        </div>
       </section>
 
-      {/* Agent Pipeline Visualization */}
-      <section className="py-16 px-6 max-w-5xl mx-auto">
+      {/* ── How It Works ── */}
+      <section className="py-24 px-6 max-w-4xl mx-auto">
         <motion.h2
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-2xl font-bold mb-12 text-muted"
+          className="text-sm font-semibold text-[#5c6672] mb-8 uppercase tracking-widest"
         >
-          The pipeline
+          How It Works
         </motion.h2>
 
-        <div className="relative flex items-center justify-between gap-2">
-          {PIPELINE_STEPS.map((step, i) => (
-            <div key={step.label} className="flex items-center flex-1">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="flex-1 flex flex-col items-center gap-3"
-              >
-                <div
-                  className="w-16 h-16 rounded-2xl border flex items-center justify-center relative"
-                  style={{
-                    borderColor: `${step.color}44`,
-                    backgroundColor: `${step.color}0d`,
-                    boxShadow: `0 0 20px ${step.color}22`,
-                  }}
-                >
-                  <step.icon className="w-7 h-7" style={{ color: step.color }} />
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl"
-                    animate={{ opacity: [0.3, 0.7, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
-                    style={{ boxShadow: `0 0 30px ${step.color}44` }}
-                  />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold">{step.label}</p>
-                  <p className="text-xs text-muted mt-0.5">{step.desc}</p>
-                </div>
-              </motion.div>
-
-              {i < PIPELINE_STEPS.length - 1 && (
-                <div className="w-8 flex-shrink-0 flex items-center justify-center -mt-8">
-                  <svg width="32" height="4" viewBox="0 0 32 4">
-                    <line
-                      x1="0" y1="2" x2="32" y2="2"
-                      stroke="#22d3ee"
-                      strokeWidth="2"
-                      strokeDasharray="6 3"
-                      className="flow-line"
-                    />
-                  </svg>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* BYOK Providers */}
-      <section className="py-16 px-6 max-w-4xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <p className="text-muted text-sm mb-6">Bring any API key. SORK runs on your providers.</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {PROVIDERS.map((p, i) => (
-              <motion.div
-                key={p}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="px-4 py-2 border border-border rounded-full text-sm text-muted hover:border-accent/40 hover:text-accent transition-all cursor-default"
-              >
-                {p}
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-16 px-6 max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              icon: Shield,
-              title: "Nemotron Safety Gate",
-              desc: "Every request is screened by NVIDIA Nemotron-3 before touching your API keys. Misuse blocked at the gate.",
-            },
-            {
-              icon: Cpu,
-              title: "Groq-Powered Speed",
-              desc: "Llama 3.3-70b on Groq delivers sub-second triage. No waiting, no cold starts.",
-            },
-            {
-              icon: Key,
-              title: "True BYOK",
-              desc: "Add Groq, Claude, NVIDIA, OpenAI, or any custom endpoint. Keys are AES-256-GCM encrypted at rest.",
-            },
-            {
-              icon: Brain,
-              title: "Hybrid Memory",
-              desc: "Cohere embeddings power semantic memory. SORK remembers your codebase across sessions.",
-            },
-            {
-              icon: Terminal,
-              title: "CLI Integration",
-              desc: "Use the SORK CLI with your license key. Same pipeline, same memory, from your terminal.",
-            },
-            {
-              icon: Zap,
-              title: "Self-Healing Agents",
-              desc: "Three agents coordinate automatically. If a fix doesn't verify, the pipeline escalates.",
-            },
-          ].map((f, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {HOW_IT_WORKS.map((item, i) => (
             <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
+              key={item.label}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="p-6 rounded-2xl border border-border bg-[#0f0f0f] hover:border-accent/20 transition-colors group"
+              className="p-5 rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d] hover:border-[#222] transition-colors"
             >
-              <f.icon className="w-6 h-6 text-accent mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="font-semibold mb-2">{f.title}</h3>
-              <p className="text-muted text-sm leading-relaxed">{f.desc}</p>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: item.color + "18", border: `1px solid ${item.color}30` }}>
+                  <item.icon className="w-3.5 h-3.5" style={{ color: item.color }} />
+                </div>
+                <span className="text-sm font-semibold" style={{ color: item.color }}>{item.label}</span>
+              </div>
+              <p className="text-sm font-semibold text-[#dce1e7] mb-1">{item.title}</p>
+              <p className="text-xs text-[#5c6672] leading-relaxed">{item.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-8 px-6 text-center text-muted text-sm">
-        <p>© {new Date().getFullYear()} SORK Cloud · Built by Bhargav Kalambhe</p>
+      {/* ── Core Features ── */}
+      <section className="py-4 pb-24 px-6 max-w-4xl mx-auto">
+        <motion.h2
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-sm font-semibold text-[#5c6672] mb-8 uppercase tracking-widest"
+        >
+          Core Features
+        </motion.h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {CORE_FEATURES.map((item, i) => (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="p-5 rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d] hover:border-[#222] transition-colors"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+                  style={{ backgroundColor: item.color + "18", border: `1px solid ${item.color}30`, color: item.color }}>
+                  {typeof item.icon === "string" ? item.icon : <item.icon className="w-3.5 h-3.5" />}
+                </div>
+                <span className="text-sm font-semibold text-[#dce1e7]">{item.label}</span>
+              </div>
+              <p className="text-xs text-[#5c6672]">{item.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-[#111] py-6 px-8 flex items-center justify-between text-xs text-[#3d444c]">
+        <span>Powered by Groq</span>
+        <span>{new Date().getFullYear()} Sork Inc.</span>
       </footer>
     </div>
   );
