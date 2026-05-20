@@ -56,8 +56,8 @@ const PLANS: Plan[] = [
   },
   {
     name: "Pro Plus",
-    monthlyPrice: 29,
-    annualPrice: 24,
+    monthlyPrice: 28,
+    annualPrice: 23,
     description: "For teams and power users.",
     features: [
       "Everything in Pro",
