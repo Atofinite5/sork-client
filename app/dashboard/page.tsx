@@ -12,7 +12,6 @@ import KeyManager   from "./_components/KeyManager";
 import UsageBar     from "./_components/UsageBar";
 import ByokManager  from "./_components/ByokManager";
 import ChatSection  from "./_components/ChatSection";
-import AgentPipeline from "./_components/AgentPipeline";
 
 interface Props {
   searchParams: Promise<{ file?: string; code?: string }>;
@@ -77,25 +76,18 @@ export default async function DashboardPage({ searchParams }: Props) {
         {/* ── Stats cards ── */}
         <StatsCards clerkId={userId} />
 
-        {/* ── Pipeline + Activity ── */}
+        {/* ── Activity + Top Files ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <ActivityChart clerkId={userId} />
           </div>
           <div>
-            <AgentPipeline />
-          </div>
-        </div>
-
-        {/* ── History + Top Files ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <ScanHistory clerkId={userId} />
-          </div>
-          <div>
             <TopFiles clerkId={userId} />
           </div>
         </div>
+
+        {/* ── History ── */}
+        <ScanHistory clerkId={userId} />
 
         {/* ── Per-key analytics (Pro) ── */}
         <KeysUsage clerkId={userId} />
