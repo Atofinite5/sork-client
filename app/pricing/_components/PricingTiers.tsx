@@ -38,8 +38,8 @@ const PLANS: Plan[] = [
   },
   {
     name: "Pro",
-    monthlyPrice: 12,
-    annualPrice: 10,
+    monthlyPrice: 19,
+    annualPrice: 16,
     description: "For developers who ship regularly.",
     features: [
       "Unlimited scan requests",
