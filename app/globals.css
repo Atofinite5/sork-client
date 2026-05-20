@@ -133,9 +133,22 @@ body {
   margin: 0.75em 0 0.25em;
 }
 
-/* Clerk modal */
-.cl-modalBackdrop { backdrop-filter: blur(8px); }
-.cl-card {
-  background: #141414 !important;
-  border: 1px solid #262626 !important;
+/* Clerk modal backdrop */
+.cl-modalBackdrop {
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Clerk card in modal */
+.cl-modalContent .cl-card {
+  background: #111111 !important;
+  border: 1px solid #1e1e1e !important;
+  box-shadow: 0 0 0 1px #1e1e1e, 0 24px 48px rgba(0,0,0,0.6) !important;
+}
+
+/* Remove Clerk's default white backgrounds */
+.cl-rootBox,
+.cl-signIn-root,
+.cl-signUp-root {
+  background: transparent !important;
 }
