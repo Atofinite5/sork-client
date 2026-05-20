@@ -143,8 +143,8 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold leading-tight">SORK Cloud</p>
           <p className="text-[11px] text-muted truncate">
-            Security Pipeline&nbsp;•&nbsp;{modelLabel}&nbsp;•&nbsp;
-            <span className="text-success">Live (Groq + Nemotron + Cohere)</span>
+            Security Pipeline&nbsp;•&nbsp;
+            <span className="text-success">sork.ai handles everything</span>
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
