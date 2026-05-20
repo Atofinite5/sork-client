@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Zap } from "lucide-react";
 import Link from "next/link";
@@ -9,12 +8,9 @@ const SUCCESS_URL = "https://sorkcloud.space/payment-success";
 
 interface Plan {
   name: string;
-  monthlyPrice: number;
-  annualPrice: number;
+  price: number;
   description: string;
   features: string[];
-  keys: number;
-  requests: string;
   highlight: boolean;
   skydoLink?: string;
 }
@@ -22,8 +18,7 @@ interface Plan {
 const PLANS: Plan[] = [
   {
     name: "Free",
-    monthlyPrice: 0,
-    annualPrice: 0,
+    price: 0,
     description: "Try SORK with no commitment.",
     features: [
       "14 lifetime scan requests",
@@ -32,14 +27,11 @@ const PLANS: Plan[] = [
       "Nemotron safety gate",
       "BYOK support",
     ],
-    keys: 1,
-    requests: "14 lifetime",
     highlight: false,
   },
   {
     name: "Pro",
-    monthlyPrice: 19,
-    annualPrice: 16,
+    price: 19,
     description: "For developers who ship regularly.",
     features: [
       "Unlimited scan requests",
@@ -49,15 +41,12 @@ const PLANS: Plan[] = [
       "BYOK support",
       "Priority queue",
     ],
-    keys: 5,
-    requests: "Unlimited",
     highlight: true,
     skydoLink: "https://dashboard.skydo.com/pay/pyl_DvhKKI",
   },
   {
     name: "Pro Plus",
-    monthlyPrice: 28,
-    annualPrice: 23,
+    price: 28,
     description: "For teams and power users.",
     features: [
       "Everything in Pro",
@@ -66,39 +55,14 @@ const PLANS: Plan[] = [
       "Dedicated scan queue",
       "SLA support",
     ],
-    keys: 20,
-    requests: "Unlimited",
     highlight: false,
     skydoLink: "https://dashboard.skydo.com/pay/pyl_4Cfxc9",
   },
 ];
 
 export default function PricingTiers() {
-  const [annual, setAnnual] = useState(false);
-
   return (
     <div>
-      {/* Toggle */}
-      <div className="flex items-center justify-center gap-3 mb-12">
-        <span className={`text-sm ${!annual ? "text-fg" : "text-muted"}`}>Monthly</span>
-        <button
-          onClick={() => setAnnual((v) => !v)}
-          className={`w-12 h-6 rounded-full border transition-colors relative ${
-            annual ? "bg-accent/20 border-accent/40" : "bg-border border-border"
-          }`}
-        >
-          <motion.div
-            animate={{ x: annual ? 24 : 2 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="absolute top-1 w-4 h-4 rounded-full bg-accent"
-          />
-        </button>
-        <span className={`text-sm ${annual ? "text-fg" : "text-muted"}`}>
-          Annual{" "}
-          <span className="text-success text-xs font-medium">save 17%</span>
-        </span>
-      </div>
-
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {PLANS.map((plan, i) => {
@@ -130,18 +94,11 @@ export default function PricingTiers() {
                 <h3 className="font-bold text-lg mb-1">{plan.name}</h3>
                 <p className="text-muted text-sm mb-4">{plan.description}</p>
                 <div className="flex items-end gap-1">
-                  <span className="text-4xl font-bold">
-                    ${annual ? plan.annualPrice : plan.monthlyPrice}
-                  </span>
-                  {plan.monthlyPrice > 0 && (
+                  <span className="text-4xl font-bold">${plan.price}</span>
+                  {plan.price > 0 && (
                     <span className="text-muted text-sm mb-1">/mo</span>
                   )}
                 </div>
-                {annual && plan.monthlyPrice > 0 && (
-                  <p className="text-xs text-muted mt-1">
-                    billed ${plan.annualPrice * 12}/year
-                  </p>
-                )}
               </div>
 
               <ul className="space-y-2.5 flex-1 mb-6">
@@ -153,7 +110,7 @@ export default function PricingTiers() {
                 ))}
               </ul>
 
-              {plan.monthlyPrice === 0 ? (
+              {plan.price === 0 ? (
                 <Link
                   href="/sign-up"
                   className="w-full py-2.5 border border-border rounded-xl text-sm font-medium text-center hover:border-accent/40 hover:text-accent transition-colors"
