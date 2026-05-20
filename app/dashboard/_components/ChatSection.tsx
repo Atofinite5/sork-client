@@ -321,11 +321,9 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
 
         {/* Footer tip */}
         <p className="text-[11px] text-muted/50 text-center mt-2.5 leading-relaxed">
-          💡 Tip: Integrate your{" "}
-          <a href="#" className="text-accent/70 hover:text-accent transition-colors">SORK VS Code extension</a>
-          {" "}for live file syncing.{" "}
-          Use <code className="bg-[#1a1a1a] border border-[#2a2a2a] rounded px-1 text-accent/80 font-mono">sork hook vscode</code>
-          {" "}to start.
+          Tip: Run{" "}
+          <code className="bg-[#1a1a1a] border border-[#2a2a2a] rounded px-1 text-accent/80 font-mono">sork send ./file.ts</code>
+          {" "}from your terminal to send any file directly into this chat.
         </p>
       </div>
     </div>
