@@ -3,38 +3,41 @@
 import Link from "next/link";
 import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 
-/* ── Animated terminal ──────────────────────────────── */
-const LINES = [
-  { t: "Scanning project...",        c: "#9A9DA3" },
-  { t: "→ Triage:  High Priority",   c: "#ffcb8e" },
-  { t: "→ Fix:     Patch generated", c: "#a0e8ef" },
-  { t: "→ Verify:  Fix validated",   c: "#aadfb4" },
-  { t: "→ Status:  Clean ✓",         c: "#aadfb4" },
+/* ── Terminal widget ─────────────────────────────────── */
+const TERMINAL_LINES = [
+  { text: "Scanning project...",        color: "#8f8fa1" },
+  { text: "→ Triage:  High Priority",   color: "#ffb689" },
+  { text: "→ Fix:     Patch generated", color: "#50d8e9" },
+  { text: "→ Verify:  Fix validated",   color: "#92f1ff" },
+  { text: "→ Status:  Clean ✓",         color: "#92f1ff" },
 ];
+
 function Terminal() {
   const [n, setN] = useState(0);
   useEffect(() => {
     let i = 0;
-    const tick = () => { i++; setN(i); if (i < LINES.length) setTimeout(tick, 700); else setTimeout(() => { setN(0); i = 0; setTimeout(tick, 400); }, 3000); };
-    const t = setTimeout(tick, 600);
+    const tick = () => { i++; setN(i); if (i < TERMINAL_LINES.length) setTimeout(tick, 700); else setTimeout(() => { setN(0); i = 0; setTimeout(tick, 400); }, 3000); };
+    const t = setTimeout(tick, 800);
     return () => clearTimeout(t);
   }, []);
   return (
-    <div style={{ background:"#0a0a0b", border:"1px solid #1e1e1e", borderRadius:16, overflow:"hidden", width:288, boxShadow:"0 24px 48px rgba(0,0,0,0.6)" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:6, padding:"10px 16px", borderBottom:"1px solid #1a1a1a" }}>
-        <span style={{ width:10, height:10, borderRadius:"50%", background:"#ffadad" }} />
-        <span style={{ width:10, height:10, borderRadius:"50%", background:"#ffcb8e" }} />
-        <span style={{ width:10, height:10, borderRadius:"50%", background:"#aadfb4" }} />
-        <span style={{ marginLeft:8, fontSize:11, color:"#3d444c", fontFamily:"monospace" }}>Terminal</span>
+    <div className="bg-[#0e0e0f] border border-[#232426] rounded overflow-hidden" style={{ width: 280, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", backdropFilter: "blur(20px)" }}>
+      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[#1B1C1E] bg-[#101112]">
+        <span className="w-2.5 h-2.5 rounded-full bg-[#ffb4ab]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#ffb689]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#92f1ff]" />
+        <span className="ml-2 font-mono text-[11px] text-[#454655]">sork — terminal</span>
       </div>
-      <div style={{ padding:"16px", fontFamily:"monospace", fontSize:12, minHeight:110, display:"flex", flexDirection:"column", gap:6 }}>
-        {LINES.slice(0, n).map((l, i) => (
-          <motion.div key={i} initial={{ opacity:0, x:-4 }} animate={{ opacity:1, x:0 }} style={{ color: l.c }}>{l.t}</motion.div>
+      <div className="px-4 py-3 font-mono text-xs min-h-[110px] flex flex-col gap-1.5">
+        {TERMINAL_LINES.slice(0, n).map((l, i) => (
+          <div key={i} style={{ color: l.color, animation: "fadeIn .2s ease" }}>{l.text}</div>
         ))}
-        {n < LINES.length && <motion.span animate={{ opacity:[1,0,1] }} transition={{ duration:.8, repeat:Infinity }} style={{ display:"inline-block", width:6, height:14, background:"#a0e8ef" }} />}
+        {n < TERMINAL_LINES.length && (
+          <span className="inline-block w-1.5 h-3 bg-[#50d8e9]" style={{ animation: "blink .8s step-end infinite" }} />
+        )}
       </div>
+      <style>{`@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}@keyframes fadeIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}`}</style>
     </div>
   );
 }
@@ -42,34 +45,54 @@ function Terminal() {
 /* ── Page ────────────────────────────────────────────── */
 export default function Page() {
   const { isSignedIn } = useUser();
+  const y = new Date().getFullYear();
+
+  const s = {
+    bg:       "#070708",
+    card:     "#101112",
+    cardAlt:  "#151617",
+    border:   "#1B1C1E",
+    border2:  "#232426",
+    text:     "#e5e2e3",
+    muted:    "#8f8fa1",
+    muted2:   "#9A9DA3",
+    cyan:     "#50d8e9",
+    violet:   "#bec2ff",
+    amber:    "#ffb689",
+    brand:    "#5E6BFF",
+    lowest:   "#0e0e0f",
+  };
 
   return (
-    <div style={{ background:"#070708", color:"#e5e2e3", fontFamily:"var(--font-inter), system-ui, sans-serif" }}>
+    <div style={{ background: s.bg, color: s.text, fontFamily: "'Inter', system-ui, sans-serif", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
-      {/* ── 1. Header ── */}
-      <header style={{ background:"#070708", position:"fixed", top:0, width:"100%", height:80, borderBottom:"1px solid #232426", zIndex:50 }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", maxWidth:1728, margin:"0 auto", padding:"0 32px", height:"100%" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <div style={{ width:32, height:32, borderRadius:"50%", border:"1px solid #9A9DA3", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--font-manrope)", fontWeight:700, fontSize:16 }}>S</div>
-            <span style={{ fontFamily:"var(--font-manrope)", fontSize:24, fontWeight:700, letterSpacing:"-0.04em" }}>SORK</span>
-          </div>
-          <nav style={{ display:"flex", gap:24, alignItems:"center" }}>
-            {["Platform","Docs","Pricing","Changelog"].map(l => (
-              <Link key={l} href={l === "Pricing" ? "/pricing" : "#"} style={{ fontSize:14, color:"#9A9DA3", textDecoration:"none", transition:"color .2s" }}
-                onMouseEnter={e => (e.currentTarget.style.color="#a0e8ef")}
-                onMouseLeave={e => (e.currentTarget.style.color="#9A9DA3")}>{l}</Link>
+      {/* ── Header ── */}
+      <header style={{ background: `${s.lowest}cc`, backdropFilter: "blur(12px)", borderBottom: `1px solid #454655`, position: "sticky", top: 0, zIndex: 50, height: 80 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 1728, margin: "0 auto", padding: "0 32px", height: "100%" }}>
+          <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 24, fontWeight: 700, letterSpacing: "-0.04em", color: s.text }}>SORK</div>
+          <nav style={{ display: "flex", gap: 24, alignItems: "center" }}>
+            {[
+              { label: "Platform", active: true },
+              { label: "Docs" },
+              { label: "Pricing", href: "/pricing" },
+              { label: "Changelog" },
+            ].map(l => (
+              <Link key={l.label} href={l.href ?? "#"}
+                style={{ fontSize: 14, color: l.active ? s.violet : "#c6c5d8", textDecoration: "none", borderBottom: l.active ? `2px solid ${s.violet}` : "none", paddingBottom: l.active ? 4 : 0, transition: "color .2s" }}>
+                {l.label}
+              </Link>
             ))}
           </nav>
-          <div style={{ display:"flex", gap:12 }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             {isSignedIn ? (
-              <Link href="/dashboard" style={{ background:"#fff", color:"#000", padding:"8px 16px", borderRadius:4, fontSize:14, fontWeight:700, textDecoration:"none" }}>Dashboard</Link>
+              <Link href="/dashboard" style={{ background: s.brand, color: "#F0F1F2", padding: "8px 16px", borderRadius: 4, fontSize: 12, fontWeight: 500, letterSpacing: "0.02em", textDecoration: "none" }}>Dashboard</Link>
             ) : (
               <>
                 <SignInButton mode="modal">
-                  <button style={{ border:"1px solid #232426", background:"transparent", color:"#e5e2e3", padding:"8px 16px", borderRadius:4, fontSize:14, cursor:"pointer" }}>Log in</button>
+                  <button style={{ background: "transparent", border: "none", color: "#c6c5d8", fontSize: 14, cursor: "pointer" }}>Log in</button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button style={{ background:"#fff", color:"#000", padding:"8px 16px", borderRadius:4, fontSize:14, fontWeight:700, cursor:"pointer" }}>Start free</button>
+                  <button style={{ background: "#fff", color: "#000", padding: "8px 16px", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Start free</button>
                 </SignUpButton>
               </>
             )}
@@ -77,374 +100,300 @@ export default function Page() {
         </div>
       </header>
 
-      <main style={{ maxWidth:1728, margin:"0 auto", paddingTop:80 }}>
+      <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
 
-        {/* ── 2. Hero ── */}
-        <section style={{ padding:"128px 32px 80px", position:"relative" }}>
-          <div style={{ maxWidth:1516, margin:"0 auto" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:40 }}>
+        {/* ── Hero ── */}
+        <section style={{ maxWidth: 1728, margin: "0 auto", width: "100%", padding: "80px 32px 64px" }}>
+          <div style={{ maxWidth: 1516, margin: "0 auto" }}>
+            {/* Headline row */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 40, flexWrap: "wrap", gap: 16 }}>
               <div>
-                <h1 style={{ fontFamily:"var(--font-manrope)", fontSize:"clamp(48px,5.5vw,76px)", lineHeight:1.1, letterSpacing:"-0.055em", fontWeight:520, color:"#e5e2e3", marginBottom:16, maxWidth:900 }}>
-                  The security pipeline<br/>for every team
+                <h1 style={{ fontFamily: "'Manrope', sans-serif", fontSize: "clamp(40px,5vw,76px)", lineHeight: 1.05, letterSpacing: "-0.055em", fontWeight: 520, color: s.text, marginBottom: 16, maxWidth: 900 }}>
+                  The security pipeline<br />for every codebase
                 </h1>
-                <p style={{ fontSize:19, color:"#9A9DA3", marginBottom:24, maxWidth:560, lineHeight:1.6 }}>
+                <p style={{ fontSize: 19, color: s.muted2, marginBottom: 24, maxWidth: 560, lineHeight: 1.6 }}>
                   SORK turns scattered vulnerabilities, patches, and code quality signals into one calm pipeline — from triage to verified fix.
                 </p>
-                <div style={{ display:"flex", gap:12 }}>
+                <div style={{ display: "flex", gap: 12 }}>
                   {isSignedIn ? (
-                    <Link href="/dashboard" style={{ background:"#fff", color:"#000", padding:"12px 24px", borderRadius:4, fontSize:16, fontWeight:700, textDecoration:"none" }}>Open Dashboard</Link>
+                    <Link href="/dashboard" style={{ background: "#fff", color: "#000", padding: "12px 24px", borderRadius: 4, fontSize: 16, fontWeight: 700, textDecoration: "none" }}>Open Dashboard</Link>
                   ) : (
                     <>
                       <SignUpButton mode="modal">
-                        <button style={{ background:"#fff", color:"#000", padding:"12px 24px", borderRadius:4, fontSize:16, fontWeight:700, cursor:"pointer" }}>Get started</button>
+                        <button style={{ background: "#fff", color: "#000", padding: "12px 24px", borderRadius: 4, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Get started</button>
                       </SignUpButton>
-                      <Link href="/pricing" style={{ background:"#1a1b1d", border:"1px solid #232426", color:"#e5e2e3", padding:"12px 24px", borderRadius:4, fontSize:16, textDecoration:"none" }}>View pricing</Link>
+                      <Link href="/pricing" style={{ background: s.card, border: `1px solid ${s.border2}`, color: s.text, padding: "12px 24px", borderRadius: 4, fontSize: 16, textDecoration: "none" }}>View pricing</Link>
                     </>
                   )}
                 </div>
               </div>
-              <div style={{ textAlign:"right", paddingBottom:8 }}>
-                <a href="#" style={{ color:"#9A9DA3", fontSize:13, fontFamily:"monospace", textDecoration:"none", display:"flex", alignItems:"center", gap:4 }}>
-                  Live pipeline  sorkcloud.space/dashboard →
-                </a>
+              <div style={{ textAlign: "right", paddingBottom: 8 }}>
+                <span style={{ color: s.muted, fontSize: 13, fontFamily: "monospace" }}>Live pipeline  sorkcloud.space/dashboard →</span>
               </div>
             </div>
 
             {/* ── Dashboard Mockup ── */}
-            <div style={{ width:"100%", background:"#101112", borderRadius:8, border:"1px solid rgba(255,255,255,0.05)", overflow:"hidden", display:"flex", height:620, boxShadow:"inset 0 1px 0 0 rgba(255,255,255,0.06), 0 24px 48px rgba(0,0,0,0.5)" }}>
+            <div style={{ width: "100%", background: s.card, borderRadius: 4, border: `1px solid rgba(255,255,255,0.05)`, overflow: "hidden", display: "flex", height: 620, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 64px rgba(0,0,0,0.6)" }}>
 
               {/* Sidebar */}
-              <div style={{ width:240, background:"#0d0e0f", borderRight:"1px solid #232426", padding:24, display:"flex", flexDirection:"column", gap:4 }}>
-                <div style={{ fontSize:10, color:"#9A9DA3", textTransform:"uppercase", letterSpacing:"0.2em", marginBottom:24, padding:"0 16px", opacity:.4, fontFamily:"monospace", fontWeight:700 }}>Navigation</div>
+              <div style={{ width: 256, background: s.lowest, borderRight: `1px solid #454655`, padding: "16px 0", display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: "0 16px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8, borderBottom: `1px solid #232426` }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", border: `1px solid #454655`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Manrope',sans-serif", fontWeight: 700, fontSize: 14 }}>S</div>
+                  <div>
+                    <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: 16, fontWeight: 700, letterSpacing: "-0.02em" }}>OPERATIONS</div>
+                    <div style={{ fontSize: 11, color: "#c6c5d8", fontFamily: "monospace" }}>v1.3.0-stable</div>
+                  </div>
+                </div>
                 {[
-                  { icon:"⬛", label:"Overview", active:true },
-                  { icon:"🔍", label:"Scans" },
-                  { icon:"🛠", label:"Fixes" },
-                  { icon:"✅", label:"Verified" },
-                  { icon:"⚠️", label:"Alerts" },
-                  { icon:"🔑", label:"API Keys" },
-                  { icon:"📊", label:"Reports" },
+                  { icon: "⬛", label: "Command",   active: false },
+                  { icon: "🔍", label: "Signals",   active: false },
+                  { icon: "✅", label: "Approvals", active: true  },
+                  { icon: "📊", label: "Dashboards",active: false },
+                  { icon: "🔑", label: "API Keys",  active: false },
+                  { icon: "📄", label: "Reports",   active: false },
                 ].map(item => (
-                  <div key={item.label} style={{ display:"flex", alignItems:"center", gap:12, padding:"8px 16px", borderRadius:8, background: item.active ? "rgba(255,255,255,0.04)" : "transparent", border: item.active ? "1px solid rgba(255,255,255,0.05)" : "1px solid transparent", color: item.active ? "#e5e2e3" : "#9A9DA3", fontSize:14, cursor:"pointer" }}>
-                    <span style={{ fontSize:14 }}>{item.icon}</span>
-                    <span>{item.label}</span>
+                  <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", borderRight: item.active ? `2px solid ${s.cyan}` : "none", color: item.active ? s.cyan : "#c6c5d8", background: item.active ? "#1c1b1d" : "transparent", fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", fontWeight: 500 }}>
+                    <span style={{ fontSize: 14 }}>{item.icon}</span>{item.label}
                   </div>
                 ))}
+                <div style={{ marginTop: "auto", padding: "16px 8px 0", borderTop: `1px solid #232426` }}>
+                  <div style={{ background: s.brand, color: "#F0F1F2", borderRadius: 4, padding: "8px 16px", fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    ⚡ Launch Scanner
+                  </div>
+                </div>
               </div>
 
               {/* Main area */}
-              <div style={{ flex:1, padding:24, display:"flex", flexDirection:"column", gap:16, background:"#0a0a0b", overflowY:"auto" }}>
-                {/* Status bar */}
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingBottom:8, borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <span style={{ width:8, height:8, borderRadius:"50%", background:"#50d8e9", display:"inline-block", animation:"pulse 2s infinite" }} />
-                    <span style={{ fontFamily:"monospace", fontSize:11, color:"#50d8e9", textTransform:"uppercase", letterSpacing:"0.1em", fontWeight:700 }}>Pipeline Live</span>
-                  </div>
-                  <div style={{ fontFamily:"monospace", fontSize:10, color:"#9A9DA3", textTransform:"uppercase", letterSpacing:"0.1em" }}>LAST SCAN: <span style={{ color:"#e5e2e3" }}>Just now</span></div>
-                </div>
-
-                {/* Stats row */}
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
-                  {[
-                    { label:"ISSUES FOUND", value:"47", trend:"-8% vs last scan", tc:"#50d8e9" },
-                    { label:"FIXES APPLIED", value:"31", trend:"66% fix rate", tc:"#aadfb4" },
-                    { label:"CODE QUALITY", value:"87/100", trend:"↑ improving", tc:"#E5FD17" },
-                  ].map(s => (
-                    <div key={s.label} style={{ background:"#101112", border:"1px solid rgba(255,255,255,0.05)", borderRadius:12, padding:16, boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-                      <div style={{ fontSize:10, color:"#9A9DA3", fontFamily:"monospace", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", opacity:.6, marginBottom:6 }}>{s.label}</div>
-                      <div style={{ fontFamily:"var(--font-manrope)", fontSize:24, fontWeight:700, letterSpacing:"-0.04em", color:"#e5e2e3" }}>{s.value}</div>
-                      <div style={{ fontSize:11, color:s.tc, marginTop:6, fontWeight:500 }}>{s.trend}</div>
+              <div style={{ flex: 1, background: "#0a0a0b", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                {/* Page header */}
+                <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${s.border}`, background: s.card }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                    <div>
+                      <h1 style={{ fontFamily: "'Manrope',sans-serif", fontSize: 32, fontWeight: 520, letterSpacing: "-0.05em", lineHeight: 1.1, marginBottom: 4 }}>Approvals</h1>
+                      <p style={{ fontSize: 13, color: "#8f8fa1", fontFamily: "monospace" }}>Every security fix in one queue</p>
                     </div>
-                  ))}
-                </div>
-
-                {/* Chart */}
-                <div style={{ background:"#101112", border:"1px solid rgba(255,255,255,0.05)", borderRadius:12, padding:16, height:180, boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)", position:"relative", overflow:"hidden" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                      <div style={{ fontFamily:"monospace", fontSize:10, fontWeight:700, color:"#e5e2e3", textTransform:"uppercase", letterSpacing:"0.1em", opacity:.6 }}>Scan Activity — 7 days</div>
-                      <span style={{ fontSize:9, color:"#50d8e9", fontFamily:"monospace", background:"rgba(80,216,233,0.1)", padding:"2px 6px", borderRadius:4 }}>LIVE TELEMETRY</span>
-                    </div>
-                    <div style={{ fontFamily:"monospace", fontSize:9, color:"#9A9DA3", opacity:.4, textTransform:"uppercase" }}>REAL-TIME</div>
-                  </div>
-                  <div style={{ position:"absolute", inset:0, backgroundImage:"radial-gradient(#232426 1px, transparent 1px)", backgroundSize:"16px 16px", opacity:.2 }} />
-                  <svg style={{ position:"absolute", bottom:0, width:"100%", height:"70%" }} viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="g1" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#50d8e9" stopOpacity="0.3" />
-                        <stop offset="100%" stopColor="#50d8e9" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path d="M0,50 Q10,45 20,55 T40,40 T60,60 T80,35 T100,45 L100,100 L0,100 Z" fill="url(#g1)" />
-                    <path d="M0,50 Q10,45 20,55 T40,40 T60,60 T80,35 T100,45" fill="none" stroke="#50d8e9" strokeWidth="1" strokeLinecap="round" />
-                    <path d="M0,70 Q15,65 30,75 T60,55 T90,80 T100,70" fill="none" stroke="#E5FD17" strokeDasharray="2,2" strokeWidth="0.75" opacity="0.5" />
-                    <circle cx="80" cy="35" r="2" fill="#50d8e9" />
-                  </svg>
-                </div>
-
-                {/* Bottom row */}
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-                  <div style={{ background:"#101112", border:"1px solid #232426", borderRadius:12, padding:16, boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-                    <div style={{ fontFamily:"monospace", fontSize:12, fontWeight:700, color:"#e5e2e3", borderBottom:"1px solid rgba(255,255,255,0.05)", paddingBottom:8, marginBottom:12, textTransform:"uppercase", letterSpacing:"0.05em" }}>Fix Queue</div>
-                    {[
-                      { f:"src/api/auth.ts",   tag:"CRITICAL", tc:"#ffadad" },
-                      { f:"queries.ts",         tag:"HIGH",     tc:"#ffcb8e" },
-                      { f:"handlers.go",        tag:"ACTIVE",   tc:"#50d8e9" },
-                      { f:"deploy.py",          tag:"MEDIUM",   tc:"#9A9DA3" },
-                    ].map(r => (
-                      <div key={r.f} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", fontSize:14, borderBottom:"1px solid #232426", padding:"6px 0" }}>
-                        <span style={{ color:"#e5e2e3" }}>{r.f}</span>
-                        <span style={{ color:r.tc, background:r.tc+"18", padding:"2px 6px", borderRadius:4, fontSize:10, fontFamily:"monospace", fontWeight:700 }}>{r.tag}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ background:"#101112", border:"1px solid #232426", borderRadius:12, padding:16, boxShadow:"inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-                    <div style={{ fontFamily:"monospace", fontSize:12, fontWeight:700, color:"#e5e2e3", borderBottom:"1px solid rgba(255,255,255,0.05)", paddingBottom:8, marginBottom:12, textTransform:"uppercase", letterSpacing:"0.05em" }}>Pipeline Status</div>
-                    {[
-                      { label:"Triage complete",  pct:100, c:"#a0e8ef", val:"47/47" },
-                      { label:"Fixes applied",    pct:66,  c:"#aadfb4", val:"31/47" },
-                      { label:"Verified clean",   pct:87,  c:"#E5FD17", val:"27/31" },
-                    ].map(p => (
-                      <div key={p.label} style={{ marginBottom:12 }}>
-                        <div style={{ height:6, background:"rgba(255,255,255,0.05)", borderRadius:999, overflow:"hidden", marginBottom:4 }}>
-                          <div style={{ height:"100%", width:`${p.pct}%`, background:p.c, borderRadius:999 }} />
+                    <div style={{ display: "flex", gap: 12, background: s.card, border: `1px solid ${s.border2}`, borderRadius: 4, padding: 8 }}>
+                      {[
+                        { label: "Pending", val: "24", dot: "#e0731d" },
+                        { label: "Blocked", val: "3",  dot: "#ffb4ab" },
+                        { label: "Fixed Today", val: "142", dot: "#92f1ff" },
+                      ].map((m, i) => (
+                        <div key={m.label} style={{ padding: "4px 12px", borderRight: i < 2 ? `1px solid ${s.border}` : "none" }}>
+                          <div style={{ fontSize: 10, color: "#c6c5d8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4, fontWeight: 500 }}>{m.label}</div>
+                          <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: 20, fontWeight: 520, letterSpacing: "-0.04em", display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: m.dot, display: "inline-block" }} />{m.val}
+                          </div>
                         </div>
-                        <div style={{ fontFamily:"monospace", fontSize:10, color:"#9A9DA3", display:"flex", justifyContent:"space-between" }}>
-                          <span>{p.label}</span>
-                          <span style={{ color:p.c, fontWeight:700 }}>{p.val}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+                  {/* Table */}
+                  <div style={{ flex: 1, overflowY: "auto", padding: 20, borderRight: `1px solid ${s.border}` }}>
+                    <div style={{ background: s.card, border: `1px solid ${s.border}`, borderRadius: 4, overflow: "hidden" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: "monospace" }}>
+                        <thead>
+                          <tr style={{ background: s.cardAlt, borderBottom: `1px solid ${s.border}` }}>
+                            {["", "Request", "Language", "Severity", "SLA", "Status"].map(h => (
+                              <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, color: "#c6c5d8", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 500 }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { dot: "#e0731d", req: "Fix SQL injection auth.ts:47",    lang: "TypeScript", sev: "High",     sla: "12m left",  status: "Pending Review", active: true,  sc: "#ffb4ab" },
+                            { dot: "#ffb4ab", req: "Patch null crash routes.go:122",  lang: "Go",         sev: "Critical", sla: "-2h overdue",status: "Blocked",       active: false, sc: "#ffb4ab" },
+                            { dot: "#e0731d", req: "Remove hardcoded secret .env",    lang: "—",          sev: "Critical", sla: "4h",         status: "Pending",       active: false, sc: "#454655" },
+                            { dot: "#e0731d", req: "Add missing auth check VEND-12",  lang: "Python",     sev: "Medium",   sla: "1d",         status: "Pending",       active: false, sc: "#454655" },
+                          ].map((r, i) => (
+                            <tr key={i} style={{ borderBottom: `1px solid ${s.border}`, background: r.active ? s.cardAlt : "transparent", borderLeft: r.active ? `2px solid ${s.brand}` : "none", cursor: "pointer", height: 40 }}>
+                              <td style={{ padding: "8px 12px", textAlign: "center" }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: r.dot, display: "inline-block" }} /></td>
+                              <td style={{ padding: "8px 12px", color: s.text, fontWeight: r.active ? 500 : 400 }}>{r.req}</td>
+                              <td style={{ padding: "8px 12px", color: "#c6c5d8" }}>{r.lang}</td>
+                              <td style={{ padding: "8px 12px" }}><span style={{ padding: "2px 8px", borderRadius: 2, fontSize: 10, background: "#93000a", color: "#ffdad6", textTransform: "uppercase", border: "1px solid #93000a" }}>{r.sev}</span></td>
+                              <td style={{ padding: "8px 12px", color: r.sla.includes("overdue") ? "#ffb4ab" : "#8f8fa1" }}>{r.sla}</td>
+                              <td style={{ padding: "8px 12px", textAlign: "right", color: "#c6c5d8" }}>{r.status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Detail panel */}
+                  <div style={{ width: 320, background: "#131314", display: "flex", flexDirection: "column" }}>
+                    <div style={{ padding: 20, borderBottom: `1px solid ${s.border}`, background: s.card }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#e0731d", display: "inline-block" }} />
+                          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#c6c5d8" }}>AUTH-001</span>
                         </div>
                       </div>
-                    ))}
+                      <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: 16, fontWeight: 520, letterSpacing: "-0.02em", marginBottom: 6 }}>Fix SQL injection</div>
+                      <div style={{ fontSize: 12, color: "#8f8fa1", lineHeight: 1.5 }}>Parameterize query in auth.ts:47 — unsanitized user input reaches SQL executor.</div>
+                    </div>
+                    <div style={{ flex: 1, overflowY: "auto", padding: 20, background: "#0e0e0f", display: "flex", flexDirection: "column", gap: 16 }}>
+                      <div style={{ background: s.card, border: `1px solid ${s.border}`, borderRadius: 4, padding: 12 }}>
+                        <div style={{ fontSize: 10, color: "#8f8fa1", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, fontWeight: 500 }}>Context</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 11, fontFamily: "monospace" }}>
+                          {[["File", "auth.ts:47"], ["Language", "TypeScript"], ["CWE", "CWE-89"], ["SLA", "12m left"]].map(([k, v]) => (
+                            <div key={k}><div style={{ color: "#454655", fontSize: 10, textTransform: "uppercase", marginBottom: 2 }}>{k}</div><div style={{ color: s.text }}>{v}</div></div>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ background: s.card, border: `1px solid ${s.border}`, borderRadius: 4, padding: 12 }}>
+                        <div style={{ fontSize: 10, color: "#8f8fa1", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, fontWeight: 500 }}>Sork.ai Analysis</div>
+                        <div style={{ fontSize: 12, color: "#c6c5d8", lineHeight: 1.5 }}>Replace string concatenation with parameterized query. Confidence: <span style={{ color: s.cyan }}>98%</span></div>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: s.card, borderTop: `1px solid rgba(255,255,255,0.05)` }}>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button style={{ flex: 1, background: s.brand, color: "#F0F1F2", borderRadius: 4, padding: "8px 0", fontSize: 13, fontWeight: 500, cursor: "pointer", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>✓ Approve</button>
+                        <button style={{ flex: 1, background: "transparent", border: `1px solid ${s.border2}`, color: "#ffb4ab", borderRadius: 4, padding: "8px 0", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>✗ Reject</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right panel — Sork.ai */}
-              <div style={{ width:300, background:"#111214", borderLeft:"1px solid #232426", padding:24, display:"flex", flexDirection:"column", gap:20 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:"#e5e2e3", borderBottom:"1px solid rgba(255,255,255,0.05)", paddingBottom:16, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <span style={{ fontSize:18, color:"#50d8e9" }}>⚡</span>
-                    <span style={{ fontFamily:"monospace", fontSize:13, textTransform:"uppercase", letterSpacing:"0.05em" }}>Sork.ai</span>
+              {/* Intelligence panel */}
+              <div style={{ width: 280, background: "#111214", borderLeft: `1px solid ${s.border2}`, display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: "16px 20px", borderBottom: `1px solid ${s.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: s.cyan }}>⚡</span>
+                    <span style={{ fontSize: 12, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Sork.ai</span>
                   </div>
-                  <span style={{ width:6, height:6, borderRadius:"50%", background:"#50d8e9", display:"inline-block" }} />
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.cyan, display: "inline-block" }} />
                 </div>
-                <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
-                  <div>
-                    <div style={{ fontSize:10, fontWeight:700, color:"#9A9DA3", textTransform:"uppercase", letterSpacing:"0.1em", opacity:.5, fontFamily:"monospace", marginBottom:8 }}>Recommended Action</div>
-                    <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:12, padding:16, fontSize:14, color:"#e5e2e3", lineHeight:1.6 }}>
-                      Patch <span style={{ color:"#a0e8ef", fontWeight:700 }}>auth.ts</span> SQL injection before next deploy — 3 critical issues detected.
+                <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+                  {[
+                    { title: "Recommended Action", body: <>Patch <span style={{ color: s.violet, fontWeight: 700 }}>auth.ts</span> SQL injection before next deploy — 3 critical issues detected.</> },
+                    { title: "Signal Summary", body: <>Code quality <span style={{ color: s.cyan, fontWeight: 500 }}>trending up (+5%)</span>, but null crash risks emerging in new routes.</> },
+                  ].map(item => (
+                    <div key={item.title}>
+                      <div style={{ fontSize: 10, color: "#8f8fa1", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 500, marginBottom: 8, fontFamily: "monospace" }}>{item.title}</div>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid rgba(255,255,255,0.05)`, borderRadius: 4, padding: 14, fontSize: 13, color: s.text, lineHeight: 1.6 }}>{item.body}</div>
                     </div>
-                  </div>
+                  ))}
                   <div>
-                    <div style={{ fontSize:10, fontWeight:700, color:"#9A9DA3", textTransform:"uppercase", letterSpacing:"0.1em", opacity:.5, fontFamily:"monospace", marginBottom:8 }}>Signal Summary</div>
-                    <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:12, padding:16, fontSize:14, color:"#e5e2e3", lineHeight:1.6 }}>
-                      Code quality <span style={{ color:"#50d8e9", fontWeight:500 }}>trending up (+5%)</span>, but null crash risks emerging in new routes.
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize:10, fontWeight:700, color:"#9A9DA3", textTransform:"uppercase", letterSpacing:"0.1em", opacity:.5, fontFamily:"monospace", marginBottom:8 }}>Scan Log</div>
-                    {[
-                      { a:"auth.ts patched",    t:"2m ago", dot:"#a0e8ef" },
-                      { a:"queries.ts verified", t:"8m ago", dot:"#ffffff33" },
-                    ].map(l => (
-                      <div key={l.a} style={{ display:"flex", alignItems:"flex-start", gap:16, padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.03)" }}>
-                        <div style={{ width:6, height:6, borderRadius:"50%", background:l.dot, marginTop:6, flexShrink:0 }} />
+                    <div style={{ fontSize: 10, color: "#8f8fa1", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 500, marginBottom: 8, fontFamily: "monospace" }}>Decision Log</div>
+                    {[{ a: "auth.ts patched", t: "2m ago", dot: s.violet }, { a: "queries.ts verified", t: "8m ago", dot: "rgba(255,255,255,0.2)" }].map(l => (
+                      <div key={l.a} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "8px 0", borderBottom: `1px solid rgba(255,255,255,0.03)` }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: l.dot, marginTop: 5, flexShrink: 0 }} />
                         <div>
-                          <div style={{ fontSize:12, color:"#e5e2e3", fontWeight:500 }}>{l.a}</div>
-                          <div style={{ fontFamily:"monospace", fontSize:10, color:"#9A9DA3", marginTop:2, opacity:.7 }}>{l.t}</div>
+                          <div style={{ fontSize: 12, color: s.text, fontWeight: 500 }}>{l.a}</div>
+                          <div style={{ fontSize: 10, color: "#8f8fa1", marginTop: 2, fontFamily: "monospace" }}>{l.t}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
                 {/* Blocking card */}
-                <div style={{ marginTop:"auto", background:"rgba(16,17,18,0.85)", backdropFilter:"blur(20px)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:20, boxShadow:"0 24px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                      <div style={{ width:28, height:28, borderRadius:"50%", background:"rgba(255,203,142,0.1)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <span style={{ color:"#ffcb8e", fontSize:14 }}>!</span>
-                      </div>
-                      <span style={{ fontSize:12, fontWeight:700, fontFamily:"monospace", textTransform:"uppercase", letterSpacing:"0.05em" }}>Blocking Issue</span>
+                <div style={{ margin: 12, background: "rgba(20,21,23,0.85)", backdropFilter: "blur(20px)", border: `1px solid rgba(255,255,255,0.1)`, borderRadius: 4, padding: 16, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(224,115,29,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#ffb689" }}>!</div>
+                      <span style={{ fontSize: 11, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>Blocking Issue</span>
                     </div>
-                    <span style={{ fontSize:10, color:"#9A9DA3", fontFamily:"monospace", textTransform:"uppercase", fontWeight:700 }}>Critical</span>
+                    <span style={{ fontSize: 10, color: "#8f8fa1", fontFamily: "monospace", fontWeight: 700 }}>Critical</span>
                   </div>
-                  <div style={{ fontSize:14, color:"#e5e2e3", marginBottom:16, lineHeight:1.6 }}>
-                    SQL injection in <code style={{ color:"#a0e8ef", background:"rgba(160,232,239,0.1)", padding:"1px 6px", borderRadius:4, fontSize:12 }}>auth.ts:47</code> — fix before any production deploy.
-                  </div>
-                  <button style={{ width:"100%", background:"#bec2ff", color:"#000ba6", padding:"10px 0", borderRadius:8, fontSize:12, fontWeight:700, fontFamily:"monospace", textTransform:"uppercase", letterSpacing:"0.05em", cursor:"pointer", border:"none", boxShadow:"0 4px 12px rgba(190,194,255,0.2)" }}>
-                    Review Fix
-                  </button>
+                  <div style={{ fontSize: 13, color: s.text, marginBottom: 12, lineHeight: 1.6 }}>SQL injection in <code style={{ color: s.cyan, background: "rgba(80,216,233,0.1)", padding: "1px 5px", borderRadius: 2, fontSize: 11 }}>auth.ts:47</code> — must fix before deploy.</div>
+                  <button style={{ width: "100%", background: s.violet, color: "#000ba6", padding: "10px 0", borderRadius: 4, fontSize: 11, fontWeight: 700, fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", cursor: "pointer", border: "none" }}>Review Fix</button>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── 3. Principle ── */}
-        <section style={{ padding:"80px 32px", borderTop:"1px solid #232426" }}>
-          <div style={{ maxWidth:1516, margin:"0 auto" }}>
-            <h2 style={{ fontFamily:"var(--font-manrope)", fontSize:"clamp(32px,3vw,48px)", lineHeight:1.2, letterSpacing:"-0.05em", fontWeight:520, color:"#e5e2e3", textAlign:"center", marginBottom:64, maxWidth:800, margin:"0 auto 64px" }}>
-              Security pipeline, simplified. The architecture of a protected codebase.
+        {/* ── How it works ── */}
+        <section style={{ borderTop: `1px solid ${s.border}`, padding: "64px 32px" }}>
+          <div style={{ maxWidth: 1516, margin: "0 auto" }}>
+            <h2 style={{ fontFamily: "'Manrope',sans-serif", fontSize: "clamp(32px,3vw,48px)", lineHeight: 1.1, letterSpacing: "-0.05em", fontWeight: 520, textAlign: "center", marginBottom: 56 }}>
+              Security pipeline, simplified.
             </h2>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:32 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }}>
               {[
-                { fig:"FIG 0.1 / TRIAGE ENGINE", color:"#a0e8ef", title:"Triage", desc:"Detects and prioritizes every vulnerability instantly across all languages." },
-                { fig:"FIG 0.2 / FIX PIPELINE", color:"#aadfb4", title:"Fix", desc:"Generates minimal, context-aware patches — verified before applying." },
-                { fig:"FIG 0.3 / VERIFY CYCLE", color:"#E5FD17", title:"Verify", desc:"Automated auditing confirms every patch before it hits production." },
+                { fig: "FIG 0.1 / TRIAGE ENGINE", title: "Triage", icon: "🔍", code: "SCAN_ACTIVE",   desc: "Detects and prioritizes vulnerabilities with CWE IDs and confidence scores." },
+                { fig: "FIG 0.2 / FIX PIPELINE",  title: "Fix",    icon: "🛠", code: "PATCH_READY",  desc: "Generates minimal, context-aware patches. Only changes what needs to change." },
+                { fig: "FIG 0.3 / VERIFY CYCLE",  title: "Verify", icon: "✓", code: "VERIFIED_OK",  desc: "Automated auditing confirms every patch is clean before it reaches production." },
               ].map((c, i) => (
-                <div key={i} style={{ border:"1px solid #232426", borderRadius:12, padding:24, background:"#070708", height:320, display:"flex", flexDirection:"column" }}>
-                  <div style={{ fontFamily:"monospace", color:"#9A9DA3", marginBottom:16, fontSize:11 }}>{c.fig}</div>
-                  <div style={{ flex:1, border:"1px solid #232426", borderRadius:8, background:"#0a0a0b", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
-                    <div style={{ position:"absolute", inset:0, backgroundImage:"radial-gradient(#232426 1px, transparent 1px)", backgroundSize:"16px 16px", opacity:.4 }} />
-                    <div style={{ position:"relative", textAlign:"center" }}>
-                      <div style={{ fontSize:36, marginBottom:8 }}>{i === 0 ? "🔍" : i === 1 ? "🛠" : "✓"}</div>
-                      <div style={{ fontFamily:"var(--font-manrope)", fontSize:20, fontWeight:600, color:c.color }}>{c.title}</div>
-                      <div style={{ fontFamily:"monospace", fontSize:10, color:"#9A9DA3", marginTop:4, opacity:.6 }}>{i === 0 ? "SCAN_ACTIVE" : i === 1 ? "PATCH_READY" : "VERIFIED_OK"}</div>
+                <div key={i} style={{ border: `1px solid ${s.border2}`, borderRadius: 4, padding: 24, background: s.bg, height: 300, display: "flex", flexDirection: "column" }}>
+                  <div style={{ fontSize: 11, color: "#8f8fa1", marginBottom: 12, fontFamily: "monospace" }}>{c.fig}</div>
+                  <div style={{ flex: 1, border: `1px solid ${s.border}`, borderRadius: 4, background: "#0a0a0b", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden", backgroundImage: "radial-gradient(#1B1C1E 1px, transparent 1px)", backgroundSize: "16px 16px" }}>
+                    <div style={{ textAlign: "center", position: "relative" }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>{c.icon}</div>
+                      <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: 18, fontWeight: 520 }}>{c.title}</div>
+                      <div style={{ fontSize: 10, color: "#454655", marginTop: 4, fontFamily: "monospace" }}>{c.code}</div>
                     </div>
                   </div>
+                  <p style={{ fontSize: 13, color: "#8f8fa1", marginTop: 12, lineHeight: 1.5 }}>{c.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── 4. Signal Intelligence (left) ── */}
-        <section style={{ padding:"80px 32px", borderTop:"1px solid #232426" }}>
-          <div style={{ maxWidth:1516, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
-            <div>
-              <h2 style={{ fontFamily:"var(--font-manrope)", fontSize:"clamp(32px,3vw,48px)", lineHeight:1.2, letterSpacing:"-0.05em", fontWeight:520, color:"#e5e2e3", marginBottom:16 }}>Turn vulnerabilities into signals</h2>
-              <p style={{ fontSize:18, color:"#9A9DA3", lineHeight:1.6 }}>Aggregate noise from every file, commit, and dependency into one structured signal stream. SORK surfaces what matters before it breaks production.</p>
-            </div>
-            <div style={{ position:"relative", height:480 }}>
-              <div style={{ position:"absolute", inset:0, background:"#0a0a0b", border:"1px solid #232426", borderRadius:12, overflow:"hidden", padding:16 }}>
-                <div style={{ fontFamily:"monospace", fontSize:11, color:"#9A9DA3", marginBottom:12, borderBottom:"1px solid #232426", paddingBottom:8 }}>Security Signals</div>
-                {[
-                  { f:"auth.ts",     t:"SQL Injection", s:"Critical", c:"#ffadad" },
-                  { f:"api/users",   t:"Missing auth check", s:"High", c:"#ffcb8e" },
-                  { f:"config.env",  t:"Hardcoded secret", s:"Critical", c:"#ffadad" },
-                  { f:"handlers.go", t:"Error ignored", s:"Medium",   c:"#fff3a3" },
-                ].map(r => (
-                  <div key={r.f} style={{ display:"flex", justifyContent:"space-between", fontSize:14, color:"#e5e2e3", padding:"8px 0", borderBottom:"1px solid #232426" }}>
-                    <span style={{ width:"40%" }}>{r.f}</span>
-                    <span style={{ width:"40%", color:"#9A9DA3" }}>{r.t}</span>
-                    <span style={{ color:r.c }}>{r.s}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ position:"absolute", left:-40, top:"25%", width:280, background:"rgba(16,17,18,0.85)", backdropFilter:"blur(20px)", border:"1px solid #232426", borderRadius:12, padding:20, boxShadow:"0 24px 48px rgba(0,0,0,0.5)", zIndex:10 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:"#e5e2e3", marginBottom:8, display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ color:"#a0e8ef" }}>⚡</span> Sork.ai Finding
-                </div>
-                <div style={{ fontSize:13, color:"#9A9DA3", marginBottom:12, lineHeight:1.5 }}>config.env has a hardcoded API key. Rotate immediately and move to env vars.</div>
-                <div style={{ display:"flex", gap:8 }}>
-                  <button style={{ background:"#232426", color:"#e5e2e3", padding:"6px 12px", borderRadius:4, fontSize:12, border:"none", cursor:"pointer" }}>Dismiss</button>
-                  <button style={{ background:"#a0e8ef", color:"#000", padding:"6px 12px", borderRadius:4, fontSize:12, fontWeight:700, border:"none", cursor:"pointer" }}>Fix Now</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── 5. Fix Command Center (right) ── */}
-        <section style={{ padding:"80px 32px", borderTop:"1px solid #232426" }}>
-          <div style={{ maxWidth:1516, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:80, alignItems:"center" }}>
-            <div style={{ position:"relative", height:480, order:1 }}>
-              <div style={{ position:"absolute", inset:0, background:"#0a0a0b", border:"1px solid #232426", borderRadius:12, overflow:"hidden", padding:24 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"monospace", color:"#9A9DA3", marginBottom:24, borderBottom:"1px solid #232426", paddingBottom:8 }}>
-                  {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => <span key={d}>{d}</span>)}
-                </div>
-                <div style={{ position:"relative", height:240 }}>
-                  {[
-                    { top:20, left:"10%", w:"40%", label:"Patch auth.ts" },
-                    { top:70, left:"30%", w:"50%", label:"Fix null crashes" },
-                    { top:120, left:"5%",  w:"35%", label:"Rotate secrets" },
-                  ].map(b => (
-                    <div key={b.label} style={{ position:"absolute", top:b.top, left:b.left, width:b.w, height:32, background:"#232426", borderRadius:4, border:"1px solid #454655", display:"flex", alignItems:"center", padding:"0 10px", fontSize:12, color:"#e5e2e3" }}>{b.label}</div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ position:"absolute", right:-40, bottom:"25%", width:260, background:"rgba(16,17,18,0.85)", backdropFilter:"blur(20px)", border:"1px solid #232426", borderRadius:12, padding:20, boxShadow:"0 24px 48px rgba(0,0,0,0.5)", zIndex:10 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:"#e5e2e3", marginBottom:12, display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ color:"#50d8e9" }}>🛠</span> Fix Queue
-                </div>
-                {[
-                  { l:"SQL injection fix",  btn:"Apply" },
-                  { l:"Null guard patch",   btn:"Apply" },
-                ].map(r => (
-                  <div key={r.l} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", fontSize:13, color:"#e5e2e3", borderBottom:"1px solid #232426", padding:"8px 0" }}>
-                    <span>{r.l}</span>
-                    <button style={{ color:"#a0e8ef", fontSize:12, background:"transparent", border:"none", cursor:"pointer", fontWeight:600 }}>{r.btn}</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ order:2 }}>
-              <h2 style={{ fontFamily:"var(--font-manrope)", fontSize:"clamp(32px,3vw,48px)", lineHeight:1.2, letterSpacing:"-0.05em", fontWeight:520, color:"#e5e2e3", marginBottom:16 }}>Guide every fix forward</h2>
-              <p style={{ fontSize:18, color:"#9A9DA3", lineHeight:1.6 }}>Map security patches against your release timeline. Keep deployments unblocked with clear fix ownership and verified patches.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── 6. Timeline ── */}
-        <section style={{ padding:"80px 32px", borderTop:"1px solid #232426" }}>
-          <div style={{ maxWidth:1516, margin:"0 auto", position:"relative" }}>
-            <div style={{ position:"absolute", top:"30%", left:0, width:"100%", height:1, background:"#232426", zIndex:0 }} />
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:32, position:"relative", zIndex:1 }}>
+        {/* ── Metrics ── */}
+        <section style={{ borderTop: `1px solid ${s.border}`, padding: "64px 32px" }}>
+          <div style={{ maxWidth: 1516, margin: "0 auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20 }}>
               {[
-                { active:true,  title:"Triage",        desc:"Detect and prioritize every vulnerability instantly." },
-                { active:false, title:"Fix",            desc:"Generate minimal, verified patches automatically." },
-                { active:false, title:"Verify",         desc:"Confirm every fix before it reaches production." },
-                { active:false, title:"Guard (watch)",  desc:"Real-time file scanning — catch issues on every save." },
-              ].map((n, i) => (
-                <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center" }}>
-                  <div style={{ width: n.active ? 16 : 12, height: n.active ? 16 : 12, borderRadius:"50%", background: n.active ? "#5E6BFF" : "#232426", border: n.active ? "none" : "1px solid #9A9DA3", marginBottom:24, boxShadow: n.active ? "0 0 15px #5E6BFF" : "none", flexShrink:0 }} />
-                  <h3 style={{ fontFamily:"var(--font-manrope)", fontSize:18, fontWeight:520, color:"#e5e2e3", marginBottom:8 }}>{n.title}</h3>
-                  <p style={{ fontSize:14, color:"#9A9DA3", lineHeight:1.5 }}>{n.desc}</p>
+                { label: "Pipeline Uptime", value: "99.9%",   dot: s.cyan,  note: "+0.1% vs last month" },
+                { label: "Avg Fix Latency", value: "1.8s",    dot: s.cyan,  note: "p95 globally via Groq" },
+                { label: "Issues Blocked",  value: "12,847",  dot: "#ffb4ab", note: "before production" },
+              ].map(m => (
+                <div key={m.label} style={{ background: s.card, border: `1px solid ${s.border}`, borderRadius: 4, padding: 20, position: "relative", overflow: "hidden", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}>
+                  <div style={{ position: "absolute", top: 16, right: 16, width: 6, height: 6, borderRadius: "50%", background: m.dot }} />
+                  <div style={{ fontSize: 11, color: "#c6c5d8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8, fontWeight: 500 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: 32, fontWeight: 520, letterSpacing: "-0.05em", lineHeight: 1.2 }}>{m.value}</div>
+                  <div style={{ fontSize: 12, color: "#9A9DA3", marginTop: 4, fontFamily: "monospace" }}>{m.note}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── 7. Quotes ── */}
-        <section style={{ padding:"80px 32px", borderTop:"1px solid #232426", background:"#050505" }}>
-          <div style={{ maxWidth:1516, margin:"0 auto", display:"grid", gridTemplateColumns:"3fr 2fr", gap:16 }}>
-            <div style={{ background:"#D1EBEB", borderRadius:24, padding:40, height:480, display:"flex", flexDirection:"column", justifyContent:"space-between" }}>
-              <p style={{ fontFamily:"var(--font-manrope)", fontSize:28, lineHeight:1.3, letterSpacing:"-0.04em", fontWeight:520, color:"#000", maxWidth:520 }}>
-                "SORK finally gave our engineering team a single source of truth. We caught 12 critical issues before our last launch — would have been a disaster."
+        {/* ── Quotes ── */}
+        <section style={{ borderTop: `1px solid ${s.border}`, padding: "64px 32px", background: "#050505" }}>
+          <div style={{ maxWidth: 1516, margin: "0 auto", display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }}>
+            <div style={{ background: "#D1EBEB", borderRadius: 24, padding: 40, height: 380, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <p style={{ fontFamily: "'Manrope',sans-serif", fontSize: 26, lineHeight: 1.3, letterSpacing: "-0.04em", fontWeight: 520, color: "#000", maxWidth: 480 }}>
+                "SORK gave our team a single source of truth. We caught 12 critical issues before our last launch."
               </p>
               <div>
-                <div style={{ fontWeight:700, color:"#000", fontSize:16 }}>Arjun Mehta</div>
-                <div style={{ color:"rgba(0,0,0,0.6)", fontSize:14 }}>CTO, Kalvium</div>
+                <div style={{ fontWeight: 700, color: "#000", fontSize: 15 }}>Arjun Mehta</div>
+                <div style={{ color: "rgba(0,0,0,0.6)", fontSize: 13 }}>CTO, Kalvium</div>
               </div>
             </div>
-            <div style={{ background:"#C4FF44", borderRadius:24, padding:40, height:480, display:"flex", flexDirection:"column", justifyContent:"space-between" }}>
-              <p style={{ fontFamily:"var(--font-manrope)", fontSize:22, lineHeight:1.4, letterSpacing:"-0.03em", fontWeight:520, color:"#000" }}>
+            <div style={{ background: "#C4FF44", borderRadius: 24, padding: 40, height: 380, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <p style={{ fontFamily: "'Manrope',sans-serif", fontSize: 22, lineHeight: 1.4, letterSpacing: "-0.03em", fontWeight: 520, color: "#000" }}>
                 "It replaced three separate security tools and endless PR review cycles."
               </p>
               <div>
-                <div style={{ fontWeight:700, color:"#000", fontSize:16 }}>Sarah Kim</div>
-                <div style={{ color:"rgba(0,0,0,0.6)", fontSize:14 }}>VP Engineering, Meridian</div>
+                <div style={{ fontWeight: 700, color: "#000", fontSize: 15 }}>Sarah Kim</div>
+                <div style={{ color: "rgba(0,0,0,0.6)", fontSize: 13 }}>VP Engineering, Meridian</div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── 8. CTA ── */}
-        <section style={{ padding:"80px 32px", borderTop:"1px solid #232426", textAlign:"center" }}>
-          <div style={{ maxWidth:800, margin:"0 auto" }}>
-            <h2 style={{ fontFamily:"var(--font-manrope)", fontSize:"clamp(48px,5.5vw,76px)", lineHeight:1.1, letterSpacing:"-0.055em", fontWeight:520, color:"#e5e2e3", marginBottom:24 }}>
-              Built for security.<br/>Ready today.
+        {/* ── CTA ── */}
+        <section style={{ borderTop: `1px solid ${s.border}`, padding: "80px 32px", textAlign: "center" }}>
+          <div style={{ maxWidth: 700, margin: "0 auto" }}>
+            <h2 style={{ fontFamily: "'Manrope',sans-serif", fontSize: "clamp(40px,5vw,76px)", lineHeight: 1.05, letterSpacing: "-0.055em", fontWeight: 520, marginBottom: 24 }}>
+              Built for security.<br />Ready today.
             </h2>
-            <div style={{ display:"flex", justifyContent:"center", gap:12 }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
               {isSignedIn ? (
-                <Link href="/dashboard" style={{ background:"#fff", color:"#000", padding:"12px 32px", borderRadius:4, fontSize:16, fontWeight:700, textDecoration:"none" }}>Open Dashboard</Link>
+                <Link href="/dashboard" style={{ background: "#fff", color: "#000", padding: "12px 32px", borderRadius: 4, fontSize: 15, fontWeight: 700, textDecoration: "none" }}>Open Dashboard</Link>
               ) : (
                 <>
                   <SignUpButton mode="modal">
-                    <button style={{ background:"#fff", color:"#000", padding:"12px 32px", borderRadius:4, fontSize:16, fontWeight:700, cursor:"pointer" }}>Start free trial</button>
+                    <button style={{ background: "#fff", color: "#000", padding: "12px 32px", borderRadius: 4, fontSize: 15, fontWeight: 700, cursor: "pointer", border: "none" }}>Start free trial</button>
                   </SignUpButton>
-                  <Link href="/pricing" style={{ background:"transparent", border:"1px solid #232426", color:"#e5e2e3", padding:"12px 32px", borderRadius:4, fontSize:16, textDecoration:"none" }}>View pricing</Link>
+                  <Link href="/pricing" style={{ background: "transparent", border: `1px solid ${s.border2}`, color: s.text, padding: "12px 32px", borderRadius: 4, fontSize: 15, textDecoration: "none" }}>Contact sales</Link>
                 </>
               )}
             </div>
@@ -453,34 +402,29 @@ export default function Page() {
       </main>
 
       {/* ── Footer ── */}
-      <footer style={{ background:"#0d0e0f", borderTop:"1px solid #232426", padding:"80px 32px 40px" }}>
-        <div style={{ maxWidth:1728, margin:"0 auto", display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr", gap:40 }}>
+      <footer style={{ background: s.lowest, borderTop: `1px solid #454655`, padding: "64px 32px 40px" }}>
+        <div style={{ maxWidth: 1728, margin: "0 auto", display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 40, marginBottom: 40 }}>
           <div>
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
-              <div style={{ width:24, height:24, borderRadius:"50%", border:"1px solid #9A9DA3", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700 }}>S</div>
-              <span style={{ fontFamily:"var(--font-manrope)", fontSize:18, fontWeight:700 }}>SORK</span>
-            </div>
-            <p style={{ fontSize:14, color:"#9A9DA3", maxWidth:240, lineHeight:1.6 }}>The security pipeline for every team.</p>
+            <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 12 }}>SORK</div>
+            <p style={{ fontSize: 13, color: "#8f8fa1", maxWidth: 220, lineHeight: 1.6 }}>The security pipeline for every team.</p>
           </div>
           {[
-            { h:"PRODUCT",  links:["Overview","Features","Security","CLI"] },
-            { h:"PLATFORM", links:["Integrations","API","Status"] },
-            { h:"COMPANY",  links:["About","Pricing","Blog"] },
-            { h:"RESOURCES",links:["Docs","GitHub","Discord"] },
+            { h: "PRODUCT",  links: ["Overview", "Features", "Security", "CLI"] },
+            { h: "PLATFORM", links: ["Integrations", "API", "Status"] },
+            { h: "COMPANY",  links: ["About", "Pricing", "Blog"] },
+            { h: "LEGAL",    links: ["Privacy", "Terms"] },
           ].map(col => (
-            <div key={col.h} style={{ display:"flex", flexDirection:"column", gap:8 }}>
-              <div style={{ fontFamily:"monospace", color:"#9A9DA3", fontSize:11, marginBottom:4, textTransform:"uppercase", letterSpacing:"0.1em" }}>{col.h}</div>
+            <div key={col.h} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: 16, fontWeight: 700, color: s.text, marginBottom: 4 }}>{col.h}</div>
               {col.links.map(l => (
-                <a key={l} href="#" style={{ fontSize:14, color:"#e5e2e3", textDecoration:"none", transition:"color .2s" }}
-                  onMouseEnter={e => (e.currentTarget.style.color="#a0e8ef")}
-                  onMouseLeave={e => (e.currentTarget.style.color="#e5e2e3")}>{l}</a>
+                <a key={l} href="#" style={{ fontSize: 14, color: "#c6c5d8", textDecoration: "none" }}>{l}</a>
               ))}
             </div>
           ))}
         </div>
-        <div style={{ maxWidth:1728, margin:"40px auto 0", paddingTop:24, borderTop:"1px solid #232426", display:"flex", justifyContent:"space-between", fontSize:13, color:"#9A9DA3" }}>
+        <div style={{ maxWidth: 1728, margin: "0 auto", paddingTop: 20, borderTop: `1px solid ${s.border}`, display: "flex", justifyContent: "space-between", fontSize: 12, color: "#8f8fa1", fontFamily: "monospace" }}>
           <span>Powered by Groq</span>
-          <span>© {new Date().getFullYear()} Sork Inc.</span>
+          <span>© {y} Sork Inc. All rights reserved.</span>
         </div>
       </footer>
     </div>
