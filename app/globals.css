@@ -41,6 +41,98 @@ body {
   to { stroke-dashoffset: -24; }
 }
 
+/* Chat prose — GFS Didot for SORK assistant messages */
+.chat-prose {
+  font-family: var(--font-didot), "Didot", "Bodoni MT", "Playfair Display", Georgia, serif;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+}
+
+.chat-prose p { margin: 0.5em 0; }
+.chat-prose p:first-child { margin-top: 0; }
+.chat-prose p:last-child { margin-bottom: 0; }
+
+.chat-prose strong {
+  font-weight: 700;
+  color: #fafafa;
+  font-family: var(--font-didot), Georgia, serif;
+}
+
+.chat-prose ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.6em 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+}
+
+.chat-prose ul li {
+  padding-left: 1.4em;
+  position: relative;
+  line-height: 1.65;
+}
+
+.chat-prose ul li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: #22d3ee;
+  font-weight: 600;
+}
+
+.chat-prose ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.chat-prose ol li { margin: 0.25em 0; }
+
+.chat-prose code {
+  font-family: var(--font-mono), "SF Mono", "Fira Code", monospace;
+  font-size: 0.82em;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  color: #22d3ee;
+  font-family: monospace;
+}
+
+.chat-prose pre {
+  background: #111;
+  border: 1px solid #262626;
+  border-radius: 10px;
+  padding: 0.875em 1em;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+.chat-prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #e2e8f0;
+  font-size: 0.8125em;
+  line-height: 1.6;
+}
+
+.chat-prose blockquote {
+  border-left: 2px solid #22d3ee44;
+  padding-left: 0.875em;
+  margin: 0.5em 0;
+  color: #a0a0a0;
+  font-style: italic;
+}
+
+.chat-prose h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fafafa;
+  margin: 0.75em 0 0.25em;
+}
+
 /* Clerk modal */
 .cl-modalBackdrop { backdrop-filter: blur(8px); }
 .cl-card {
