@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Bot, User, Loader2, Paperclip, Globe, Settings2,
-  FileCode, X, Cpu, Circle
+  FileCode, X
 } from "lucide-react";
 import { apiPost } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
@@ -125,7 +125,6 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
-  const modelLabel = activeModel.replace("-versatile", "").replace("-instant", "").replace("llama-", "Llama-").replace("mixtral-", "Mixtral-").replace("gemma2-", "Gemma2-");
 
   return (
     <div
@@ -149,10 +148,6 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-xs text-muted hidden sm:block opacity-50">drag files here</span>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-accent/20 bg-accent/5">
-            <Cpu className="w-3 h-3 text-accent" />
-            <span className="text-[11px] text-accent font-medium">{modelLabel}-v1</span>
-          </div>
           <div className="flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
             <span className="text-[11px] text-muted">Live</span>
