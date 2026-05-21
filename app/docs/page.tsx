@@ -1,7 +1,7 @@
+"use client";
+
 import SiteNav from "@/components/SiteNav";
 import Link from "next/link";
-
-export const metadata = { title: "Docs — SORK Cloud" };
 
 const T = {
   bg:      "#070708",
