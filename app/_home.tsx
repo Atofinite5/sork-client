@@ -998,30 +998,6 @@ export default function Page() {
           </div>
         </section>
 
-        {/* ── Feature timeline ── */}
-        <section className="px-8 border-t border-custom-divider py-20">
-          <div className="max-w-[1516px] mx-auto relative pt-20">
-            <div className="absolute top-[55px] left-0 w-full h-px bg-custom-divider" />
-            <div className="grid grid-cols-4 gap-8">
-              {[
-                { dot: true,  title: "Scan Detection",  desc: "40+ patterns across 9+ languages. CWE IDs with confidence scores." },
-                { dot: false, title: "Patch Generation", desc: "Minimal diffs from sork.ai. Only the vulnerable lines change." },
-                { dot: false, title: "Verify Score",     desc: "0–100 score. Auto-approve ≥80. Human review below threshold." },
-                { dot: false, title: "Deploy Ready",     desc: "Clean badge. Full audit trail in dashboard before you ship." },
-              ].map((n, i) => (
-                <div key={i} className="flex flex-col items-center text-center">
-                  {n.dot
-                    ? <div className="w-4 h-4 rounded-full mb-6 relative z-10" style={{ background: "#5E6BFF", boxShadow: "0 0 15px #5E6BFF" }} />
-                    : <div className="w-3 h-3 rounded-full mb-6 mt-0.5 relative z-10" style={{ background: "#232426", border: "1px solid #8f8fa1" }} />
-                  }
-                  <h3 className="font-h4 text-on-surface mb-2" style={{ fontSize: 16, fontWeight: 600 }}>{n.title}</h3>
-                  <p className="text-[13px] text-custom-text-muted leading-relaxed">{n.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ── Core features ── */}
         <section className="px-8 border-t border-custom-divider py-20">
           <div className="max-w-[1516px] mx-auto">
