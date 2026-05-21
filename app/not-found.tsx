@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 
 // Simple 404 — no Clerk dependency so it can prerender safely
