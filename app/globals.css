@@ -2,17 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-}
-
-* {
-  box-sizing: border-box;
-}
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
 
 body {
-  background: #0a0a0a;
-  color: #fafafa;
+  background: #070708;
+  color: #e5e2e3;
   font-family: var(--font-inter), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -21,25 +16,37 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #141414; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #22d3ee44; }
+::-webkit-scrollbar-thumb:hover { background: #a0e8ef44; }
+
+/* Template helpers */
+.glass-panel { background: rgba(16,17,18,0.85); backdrop-filter: blur(20px); }
+.inner-glow  { box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.06); }
+.thin-border { border: 1px solid #232426; }
+.dot-pattern {
+  background-image: radial-gradient(#232426 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Chat prose */
+.chat-prose { font-family: var(--font-didot), Georgia, serif; font-size: 0.9375rem; line-height: 1.75; }
+.chat-prose p { margin: 0.5em 0; }
+.chat-prose p:first-child { margin-top: 0; }
+.chat-prose p:last-child  { margin-bottom: 0; }
+.chat-prose strong { font-weight: 700; color: #fafafa; }
+.chat-prose ul { list-style:none; padding:0; margin:0.6em 0; display:flex; flex-direction:column; gap:0.35em; }
+.chat-prose ul li { padding-left:1.4em; position:relative; line-height:1.65; }
+.chat-prose ul li::before { content:"–"; position:absolute; left:0; color:#22d3ee; font-weight:600; }
+.chat-prose ol { padding-left:1.5em; margin:0.5em 0; }
+.chat-prose code { font-family:monospace; font-size:0.82em; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px; padding:0.1em 0.4em; color:#22d3ee; }
+.chat-prose pre { background:#111; border:1px solid #262626; border-radius:10px; padding:0.875em 1em; overflow-x:auto; margin:0.75em 0; }
+.chat-prose pre code { background:none; border:none; padding:0; color:#e2e8f0; font-size:0.8125em; line-height:1.6; }
+
+/* Flow line animation */
+.flow-line { stroke-dasharray: 8 4; animation: flowDash 1.5s linear infinite; }
+@keyframes flowDash { to { stroke-dashoffset: -24; } }
 
 /* Glow utilities */
-.glow-cyan {
-  box-shadow: 0 0 20px #22d3ee33, 0 0 60px #22d3ee11;
-}
-.glow-cyan-strong {
-  box-shadow: 0 0 30px #22d3ee66, 0 0 80px #22d3ee22;
-}
-
-/* Agent pipeline flow line */
-.flow-line {
-  stroke-dasharray: 8 4;
-  animation: flowDash 1.5s linear infinite;
-}
-
-@keyframes flowDash {
-  to { stroke-dashoffset: -24; }
-}
+.glow-cyan { box-shadow: 0 0 20px #22d3ee33, 0 0 60px #22d3ee11; }
 
 /* Chat prose — GFS Didot for SORK assistant messages */
 .chat-prose {
@@ -134,8 +141,6 @@ body {
 }
 
 /* Clerk modal */
-.cl-modalBackdrop { backdrop-filter: blur(8px); }
-.cl-card {
-  background: #141414 !important;
-  border: 1px solid #262626 !important;
-}
+.cl-modalBackdrop { backdrop-filter: blur(12px); background: rgba(0,0,0,0.6) !important; }
+.cl-modalContent .cl-card { background: #111111 !important; border: 1px solid #1e1e1e !important; box-shadow: 0 0 0 1px #1e1e1e, 0 24px 48px rgba(0,0,0,0.6) !important; }
+.cl-rootBox, .cl-signIn-root, .cl-signUp-root { background: transparent !important; }
