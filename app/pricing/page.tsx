@@ -1,34 +1,14 @@
-import Link from "next/link";
-import { Shield } from "lucide-react";
-import { auth } from "@clerk/nextjs/server";
+import SiteNav from "@/components/SiteNav";
 import PricingCards from "./_components/PricingCards";
 
 export const metadata = { title: "Pricing — SORK Cloud" };
 
 export default async function PricingPage() {
-  const { userId } = await auth();
-
   return (
     <div style={{ background: "#070708", color: "#e5e2e3", minHeight: "100vh", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* ── Nav ── */}
-      <nav style={{ background: "#0e0e0f", borderBottom: "1px solid #454655", height: 80, display: "flex", alignItems: "center", padding: "0 32px", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(94,107,255,0.15)", border: "1px solid rgba(94,107,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#bec2ff", fontSize: 14, fontWeight: 700 }}>S</span>
-          </div>
-          <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 18, letterSpacing: "-0.04em", color: "#e5e2e3" }}>SORK Cloud</span>
-        </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {userId ? (
-            <>
-              <Link href="/dashboard" style={{ color: "#e5e2e3", fontSize: 14, textDecoration: "none", background: "#5E6BFF", padding: "7px 16px", borderRadius: 4, fontWeight: 600 }}>Dashboard</Link>
-            </>
-          ) : (
-            <Link href="/sign-in" style={{ color: "#e5e2e3", fontSize: 14, textDecoration: "none" }}>Log in</Link>
-          )}
-        </div>
-      </nav>
+      <SiteNav />
 
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
 
