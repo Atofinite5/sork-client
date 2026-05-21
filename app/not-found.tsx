@@ -1,7 +1,6 @@
 import Link from "next/link";
 
-// Force dynamic so Clerk in root layout never tries to prerender this with a placeholder key
-export const dynamic = "force-dynamic";
+// Simple 404 — no Clerk dependency so it can prerender safely
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-bg text-fg flex items-center justify-center px-6">
