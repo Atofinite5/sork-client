@@ -444,40 +444,30 @@ function SorkPanel({ view }: { view: HeroView }) {
   );
 }
 
-/* ─── Auto-demo cursor sequence ──────────────────────── */
-type DemoStep = {
-  target: string;
-  view?: HeroView;
-  click?: boolean;
-  pause: number;
-  label: string;
-  step: string; // shown in banner, e.g. "01 · Scan"
-};
+/* ─── Demo steps ─────────────────────────────────────── */
+type DemoStep = { target: string; view?: HeroView; pause: number; num: string; title: string; desc: string };
 
-const DEMO_SEQUENCE: DemoStep[] = [
-  { target: "sidebar-scans",    view: "scans",    click: true,  pause: 1600, step: "01 · Scan",    label: "Running sork scan — detecting vulnerabilities across your codebase" },
-  { target: "scan-row-0",                         click: false, pause: 1200, step: "02 · Detect",  label: "SQL injection found in auth.ts:47 — this would have shipped to prod" },
-  { target: "scan-review-0",                      click: false, pause: 1000, step: "03 · Review",  label: "CWE-89 · confidence 98% · fix hint ready" },
-  { target: "sidebar-fixes",    view: "fixes",    click: true,  pause: 1600, step: "04 · Fix",     label: "sork fix — generating minimal secure patch" },
-  { target: "fix-apply-0",                        click: true,  pause: 1400, step: "05 · Apply",   label: "2 lines changed, nothing else touched — commit is now clean ✓" },
-  { target: "sidebar-verified", view: "verified", click: true,  pause: 1600, step: "06 · Verify",  label: "Re-scanning patched code — zero new vulnerabilities" },
-  { target: "verified-item-0",                    click: false, pause: 1200, step: "07 · Score",   label: "Verify score 98/100 — your commit is error-free and deploy-ready ✓" },
-  { target: "sidebar-reports",  view: "reports",  click: true,  pause: 1600, step: "08 · Health",  label: "sork doctor — checking for AI hallucinations & code quality" },
-  { target: "reports-chart",                      click: false, pause: 1200, step: "09 · Insights", label: "0 hallucinated APIs · quality score trending up · last 7 commits passed ✓" },
-  { target: "sidebar-keys",     view: "keys",     click: true,  pause: 1600, step: "10 · Keys",    label: "Credentials stored with AES-256-GCM encryption — never exposed" },
-  { target: "key-row-0",                          click: false, pause: 1000, step: "11 · Status",  label: "Keys active & healthy — BYOK bypasses shared quota" },
-  { target: "sidebar-command",  view: "command",  click: true,  pause: 1600, step: "12 · Done",    label: "Every commit scanned, patched, verified — your code ships clean" },
+const DEMO_STEPS: DemoStep[] = [
+  { target: "sidebar-scans",    view: "scans",    pause: 2200, num: "01", title: "sork scan",    desc: "Scans every file — finds SQL injection, null crashes, secrets, and 40+ vulnerability patterns before your commit." },
+  { target: "scan-row-0",                         pause: 1800, num: "02", title: "Issue detected", desc: "CWE-89 SQL injection in auth.ts:47 — confidence 98%. This bug would have shipped to production on your next push." },
+  { target: "sidebar-fixes",    view: "fixes",    pause: 2200, num: "03", title: "sork fix",     desc: "Generates a minimal secure patch — only the 2 vulnerable lines change. Your logic stays untouched." },
+  { target: "fix-apply-0",                        pause: 2000, num: "04", title: "Apply patch",  desc: "Click Apply Fix — the diff is applied directly to your file. Commit is now error-free and ready to push." },
+  { target: "sidebar-verified", view: "verified", pause: 2200, num: "05", title: "sork verify",  desc: "Re-scans the patched code. Verify score: 98/100. Zero new vulnerabilities introduced. Deploy-ready ✓" },
+  { target: "sidebar-reports",  view: "reports",  pause: 2200, num: "06", title: "sork doctor",  desc: "Full health report: 0 secrets exposed, 0 AI hallucinations, quality score 87/100. Every commit is protected." },
+  { target: "sidebar-keys",     view: "keys",     pause: 2000, num: "07", title: "API Keys",     desc: "Manage license keys and BYOK credentials. All keys stored AES-256-GCM encrypted — never exposed in logs." },
+  { target: "sidebar-command",  view: "command",  pause: 2000, num: "08", title: "Done",         desc: "Scanned → Fixed → Verified. Every commit your team pushes goes through this pipeline automatically." },
 ];
 
 /* ─── Full hero dashboard ────────────────────────────── */
 function HeroDashboard() {
-  const [view,         setView]        = useState<HeroView>("command");
-  const [cursorPos,    setCursorPos]   = useState({ x: 0, y: 0 });
-  const [cursorVis,    setCursorVis]   = useState(false);
-  const [clicking,     setClicking]    = useState(false);
-  const [stepBanner,   setStepBanner]  = useState({ step: "", label: "" });
+  const [view,       setView]      = useState<HeroView>("command");
+  const [stepIdx,    setStepIdx]   = useState(-1);   // -1 = intro
+  const [curX,       setCurX]      = useState(100);
+  const [curY,       setCurY]      = useState(200);
+  const [curVis,     setCurVis]    = useState(false);
+  const [clicking,   setClicking]  = useState(false);
+  const [highlight,  setHighlight] = useState("");   // data-demo target to glow
   const containerRef = useRef<HTMLDivElement>(null);
-  const stepRef      = useRef(0);
 
   function getPos(target: string) {
     if (!containerRef.current) return null;
@@ -493,53 +483,50 @@ function HeroDashboard() {
     const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
     async function runDemo() {
-      await delay(1400);
+      await delay(1200);
       if (cancelled) return;
-      setCursorVis(true);
+      setCurVis(true);
 
+      // Start at sidebar-scans as initial cursor position
+      const initPos = getPos("sidebar-command");
+      if (initPos) { setCurX(initPos.x); setCurY(initPos.y); }
+
+      let idx = 0;
       while (!cancelled) {
-        const step = DEMO_SEQUENCE[stepRef.current % DEMO_SEQUENCE.length];
+        const step = DEMO_STEPS[idx % DEMO_STEPS.length];
 
-        // For sidebar clicks: get position first (sidebar always in DOM)
-        // For content items: view must be set FIRST then wait for re-render
-        let pos = getPos(step.target);
-
-        // If we can't find the element, set the view and wait for DOM update
-        if (!pos && step.view) {
+        // Ensure view is set before looking for content elements
+        if (step.view) {
           setView(step.view);
-          await delay(180); // wait for React re-render
-          pos = getPos(step.target);
+          await delay(200);
         }
-        if (!pos) { stepRef.current++; continue; }
 
-        // Move cursor
-        setCursorPos({ x: pos.x, y: pos.y });
-        setStepBanner({ step: "", label: "" }); // clear during travel
-        await delay(480);
+        const pos = getPos(step.target);
+        if (!pos) { idx++; continue; }
+
+        // Move cursor to target
+        setHighlight("");
+        setCurX(pos.x);
+        setCurY(pos.y);
+        await delay(520); // cursor travel
         if (cancelled) return;
 
-        // Show step banner + label
-        setStepBanner({ step: step.step, label: step.label });
+        // Show step card + highlight
+        setStepIdx(idx % DEMO_STEPS.length);
+        setHighlight(step.target);
 
-        if (step.click) {
-          await delay(300);
-          setClicking(true);
-          await delay(160);
-          setClicking(false);
-          if (step.view) {
-            setView(step.view);
-            await delay(180); // wait for new view DOM
-          }
-          await delay(step.pause);
-        } else {
-          await delay(step.pause);
-        }
+        // Click animation
+        setClicking(true);
+        await delay(180);
+        setClicking(false);
+        await delay(step.pause);
 
-        stepRef.current++;
-        if (stepRef.current >= DEMO_SEQUENCE.length) {
-          stepRef.current = 0;
-          setStepBanner({ step: "", label: "" });
-          await delay(800);
+        idx++;
+        if (idx % DEMO_STEPS.length === 0) {
+          setHighlight("");
+          setStepIdx(-1);
+          setView("command");
+          await delay(1000);
         }
       }
     }
@@ -548,6 +535,8 @@ function HeroDashboard() {
     return () => { cancelled = true; };
   }, []);
 
+  const currentStep = stepIdx >= 0 ? DEMO_STEPS[stepIdx] : null;
+
   return (
     <div
       ref={containerRef}
@@ -555,24 +544,32 @@ function HeroDashboard() {
       style={{ border: "1px solid rgba(255,255,255,0.05)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.7)" }}
     >
 
-      {/* ── Auto cursor ── */}
-      {cursorVis && (
-        <div
-          className="pointer-events-none absolute z-50"
-          style={{
-            left: cursorPos.x,
-            top:  cursorPos.y,
-            transform: "translate(-3px, -2px)",
-            transition: "left 460ms cubic-bezier(0.22,1,0.36,1), top 460ms cubic-bezier(0.22,1,0.36,1)",
-            filter: clicking ? "drop-shadow(0 0 6px #5E6BFF)" : "drop-shadow(0 1px 3px rgba(0,0,0,0.8))",
-          }}
-        >
-          <svg width="22" height="27" viewBox="0 0 22 27" fill="none">
-            <path d="M1 1L1 22L6 16.5L10 25.5L13.5 24L9.5 15.5L17 15.5Z" fill="white" stroke="#1a1a1a" strokeWidth="1.2" strokeLinejoin="round"/>
+      {/* ── Cursor ── */}
+      {curVis && (
+        <div className="pointer-events-none absolute z-[60]" style={{
+          left: curX, top: curY,
+          transform: "translate(-4px, -3px)",
+          transition: "left 500ms cubic-bezier(0.22,1,0.36,1), top 500ms cubic-bezier(0.22,1,0.36,1)",
+        }}>
+          {/* Glow behind cursor */}
+          <div className="absolute rounded-full" style={{
+            width: 28, height: 28, top: -10, left: -10,
+            background: "rgba(94,107,255,0.18)",
+            filter: "blur(6px)",
+            opacity: clicking ? 1 : 0.5,
+            transition: "opacity 0.2s",
+          }} />
+          {/* Arrow */}
+          <svg width="24" height="30" viewBox="0 0 24 30" fill="none" style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.9))" }}>
+            <path d="M2 2L2 24L7.5 18L11.5 28L15 26.5L11 16.5L19 16.5Z" fill="white" stroke="#111" strokeWidth="1.5" strokeLinejoin="round"/>
           </svg>
+          {/* Click ripple */}
           {clicking && (
-            <div className="absolute rounded-full"
-              style={{ width: 32, height: 32, top: -12, left: -12, border: "1.5px solid rgba(94,107,255,0.7)", animation: "cursorClick 0.4s ease-out forwards" }} />
+            <div className="absolute rounded-full" style={{
+              width: 36, height: 36, top: -14, left: -14,
+              border: "2px solid rgba(94,107,255,0.8)",
+              animation: "demoClick 0.45s ease-out forwards",
+            }} />
           )}
         </div>
       )}
@@ -586,6 +583,7 @@ function HeroDashboard() {
         <div className="flex flex-col py-2">
           {SIDEBAR_ITEMS.map(item => {
             const active = view === item.view;
+            const isHighlighted = highlight === `sidebar-${item.view}`;
             return (
               <button
                 key={item.view}
@@ -595,8 +593,10 @@ function HeroDashboard() {
                 style={{
                   borderRight: active ? "2px solid #50d8e9" : "2px solid transparent",
                   color:      active ? "#50d8e9" : "#c6c5d8",
-                  background: active ? "#1c1b1d" : "transparent",
+                  background: isHighlighted ? "rgba(94,107,255,0.12)" : active ? "#1c1b1d" : "transparent",
+                  boxShadow:  isHighlighted ? "inset 0 0 0 1px rgba(94,107,255,0.35)" : "none",
                   fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500,
+                  transition: "all 0.2s",
                 }}
               >
                 <span style={{ fontSize: 13 }}>{item.icon}</span>
@@ -605,51 +605,54 @@ function HeroDashboard() {
             );
           })}
         </div>
-        {/* version footer — no launch scanner button */}
         <div className="mt-auto px-4 py-3 border-t border-custom-divider">
           <div className="font-mono-data text-[9px] text-custom-text-muted">sork.ai · always on</div>
         </div>
       </div>
 
       {/* ── Main pane ── */}
-      <div className="flex-1 bg-[#0a0a0b] flex flex-col overflow-hidden">
+      <div className="flex-1 bg-[#0a0a0b] flex flex-col overflow-hidden relative">
 
-        {/* Step banner — shows what the demo is doing */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-custom-divider-light flex-shrink-0"
-          style={{ background: "#0c0c0d", minHeight: 44 }}>
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse flex-shrink-0" />
-            {stepBanner.step ? (
-              <>
-                <span className="font-mono-data text-[10px] text-secondary font-bold tracking-widest flex-shrink-0 uppercase">
-                  {stepBanner.step}
-                </span>
-                <span className="font-mono-data text-[10px] text-custom-text-muted truncate">
-                  {stepBanner.label}
-                </span>
-              </>
-            ) : (
-              <span className="font-mono-data text-[10px] text-secondary uppercase tracking-widest font-bold">Pipeline Live</span>
-            )}
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-custom-divider-light flex-shrink-0" style={{ background: "#0c0c0d" }}>
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
+            <span className="font-mono-data text-[10px] text-secondary uppercase tracking-widest font-bold">Pipeline Live</span>
           </div>
-          <span className="font-mono-data text-[9px] text-custom-text-muted uppercase tracking-widest flex-shrink-0 ml-4">
-            LAST SCAN: <span className="text-on-surface">Just now</span>
-          </span>
+          <span className="font-mono-data text-[9px] text-custom-text-muted uppercase">LAST SCAN: <span className="text-on-surface">Just now</span></span>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
           <CenterPane view={view} />
         </div>
+
+        {/* ── Step tooltip card — appears over main pane ── */}
+        {currentStep && (
+          <div className="absolute bottom-4 left-4 right-4 z-40 pointer-events-none" style={{ animation: "stepCardIn 0.3s ease-out" }}>
+            <div className="rounded-xl px-4 py-3" style={{
+              background: "rgba(10,10,12,0.97)",
+              backdropFilter: "blur(16px)",
+              border: "1px solid rgba(94,107,255,0.45)",
+              boxShadow: "0 0 0 1px rgba(94,107,255,0.12), 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(94,107,255,0.08)",
+            }}>
+              <div className="flex items-center gap-3 mb-1.5">
+                <span className="font-mono-data text-[9px] font-bold px-2 py-0.5 rounded" style={{ background: "rgba(94,107,255,0.2)", color: "#bec2ff", letterSpacing: "0.1em" }}>
+                  STEP {currentStep.num}
+                </span>
+                <span className="font-mono-data text-[12px] font-bold text-on-surface">{currentStep.title}</span>
+              </div>
+              <p className="font-mono-data text-[11px] leading-relaxed" style={{ color: "#9A9DA3" }}>{currentStep.desc}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Sork.ai panel ── */}
       <SorkPanel view={view} />
 
       <style>{`
-        @keyframes cursorClick {
-          0%   { transform: scale(0.2); opacity: 1; }
-          100% { transform: scale(2.2); opacity: 0; }
-        }
+        @keyframes demoClick { 0% { transform:scale(0.3);opacity:1 } 100% { transform:scale(2.4);opacity:0 } }
+        @keyframes stepCardIn { from { opacity:0;transform:translateY(8px) } to { opacity:1;transform:translateY(0) } }
       `}</style>
     </div>
   );
