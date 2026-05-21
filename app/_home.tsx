@@ -678,7 +678,7 @@ export default function Page() {
               <div>
                 <h1 className="font-h1 text-on-surface mb-4 max-w-[900px]"
                   style={{ fontSize: "clamp(44px,5.5vw,76px)", lineHeight: "1.05", letterSpacing: "-0.055em", fontWeight: 520 }}>
-                  The security pipeline<br />for every codebase
+                  The AI DevSecOps Engineer<br />for secure code delivery
                 </h1>
                 <p className="font-body-lg text-[18px] text-custom-text-muted mb-6 max-w-2xl leading-relaxed">
                   SORK scans, fixes, and verifies vulnerabilities across TypeScript, Python, Rust, Go, Java and more — powered by sork.ai.
