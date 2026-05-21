@@ -445,79 +445,91 @@ function SorkPanel({ view }: { view: HeroView }) {
 }
 
 /* ─── Auto-demo cursor sequence ──────────────────────── */
-type DemoStep = { target: string; view?: HeroView; click?: boolean; pause: number; label: string };
+type DemoStep = {
+  target: string;
+  view?: HeroView;
+  click?: boolean;
+  pause: number;
+  label: string;
+  step: string; // shown in banner, e.g. "01 · Scan"
+};
 
 const DEMO_SEQUENCE: DemoStep[] = [
-  { target: "sidebar-scans",    view: "scans",    click: true,  pause: 1400, label: "Scanning codebase for vulnerabilities..." },
-  { target: "scan-row-0",                         click: false, pause: 900,  label: "SQL injection found — your commit was about to break prod" },
-  { target: "scan-review-0",                      click: false, pause: 800,  label: "Reviewing CWE-89 · confidence 98%" },
-  { target: "sidebar-fixes",    view: "fixes",    click: true,  pause: 1400, label: "Generating secure patch..." },
-  { target: "fix-apply-0",                        click: true,  pause: 1100, label: "Minimal diff applied · 2 lines changed · commit is now clean ✓" },
-  { target: "sidebar-verified", view: "verified", click: true,  pause: 1400, label: "Verifying fix — checking for new issues..." },
-  { target: "verified-item-0",                    click: false, pause: 900,  label: "Score 98/100 · zero new vulnerabilities · deploy-ready ✓" },
-  { target: "sidebar-reports",  view: "reports",  click: true,  pause: 1400, label: "Checking code health & AI artifact detection" },
-  { target: "reports-chart",                      click: false, pause: 900,  label: "0 hallucinated APIs · all AI-generated code reviewed ✓" },
-  { target: "sidebar-keys",     view: "keys",     click: true,  pause: 1400, label: "Managing credentials — AES-256-GCM encrypted" },
-  { target: "key-row-0",                          click: false, pause: 800,  label: "Keys are safe · never exposed in logs or responses" },
-  { target: "sidebar-command",  view: "command",  click: true,  pause: 1400, label: "Back to command — every commit protected" },
-  { target: "launch-scanner",                     click: true,  pause: 1200, label: "Launching full pipeline scan..." },
+  { target: "sidebar-scans",    view: "scans",    click: true,  pause: 1600, step: "01 · Scan",    label: "Running sork scan — detecting vulnerabilities across your codebase" },
+  { target: "scan-row-0",                         click: false, pause: 1200, step: "02 · Detect",  label: "SQL injection found in auth.ts:47 — this would have shipped to prod" },
+  { target: "scan-review-0",                      click: false, pause: 1000, step: "03 · Review",  label: "CWE-89 · confidence 98% · fix hint ready" },
+  { target: "sidebar-fixes",    view: "fixes",    click: true,  pause: 1600, step: "04 · Fix",     label: "sork fix — generating minimal secure patch" },
+  { target: "fix-apply-0",                        click: true,  pause: 1400, step: "05 · Apply",   label: "2 lines changed, nothing else touched — commit is now clean ✓" },
+  { target: "sidebar-verified", view: "verified", click: true,  pause: 1600, step: "06 · Verify",  label: "Re-scanning patched code — zero new vulnerabilities" },
+  { target: "verified-item-0",                    click: false, pause: 1200, step: "07 · Score",   label: "Verify score 98/100 — your commit is error-free and deploy-ready ✓" },
+  { target: "sidebar-reports",  view: "reports",  click: true,  pause: 1600, step: "08 · Health",  label: "sork doctor — checking for AI hallucinations & code quality" },
+  { target: "reports-chart",                      click: false, pause: 1200, step: "09 · Insights", label: "0 hallucinated APIs · quality score trending up · last 7 commits passed ✓" },
+  { target: "sidebar-keys",     view: "keys",     click: true,  pause: 1600, step: "10 · Keys",    label: "Credentials stored with AES-256-GCM encryption — never exposed" },
+  { target: "key-row-0",                          click: false, pause: 1000, step: "11 · Status",  label: "Keys active & healthy — BYOK bypasses shared quota" },
+  { target: "sidebar-command",  view: "command",  click: true,  pause: 1600, step: "12 · Done",    label: "Every commit scanned, patched, verified — your code ships clean" },
 ];
 
 /* ─── Full hero dashboard ────────────────────────────── */
 function HeroDashboard() {
-  const [view, setView]       = useState<HeroView>("command");
-  const [cursor, setCursor]     = useState({ x: 100, y: 83, visible: false });
-  const [clicking, setClicking] = useState(false);
-  const [cursorLabel, setCursorLabel] = useState("");
+  const [view,         setView]        = useState<HeroView>("command");
+  const [cursorPos,    setCursorPos]   = useState({ x: 0, y: 0 });
+  const [cursorVis,    setCursorVis]   = useState(false);
+  const [clicking,     setClicking]    = useState(false);
+  const [stepBanner,   setStepBanner]  = useState({ step: "", label: "" });
   const containerRef = useRef<HTMLDivElement>(null);
   const stepRef      = useRef(0);
-  const pauseRef     = useRef(false); // user is interacting
 
-  /* resolve DOM position for a data-demo target */
-  function getPos(target: string): { x: number; y: number } | null {
+  function getPos(target: string) {
     if (!containerRef.current) return null;
     const el = containerRef.current.querySelector<HTMLElement>(`[data-demo="${target}"]`);
     if (!el) return null;
     const cr = containerRef.current.getBoundingClientRect();
     const er = el.getBoundingClientRect();
-    return {
-      x: er.left - cr.left + er.width  / 2,
-      y: er.top  - cr.top  + er.height / 2,
-    };
+    return { x: er.left - cr.left + er.width / 2, y: er.top - cr.top + er.height / 2 };
   }
 
   useEffect(() => {
     let cancelled = false;
-
-    function delay(ms: number) {
-      return new Promise<void>(res => setTimeout(res, ms));
-    }
+    const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
     async function runDemo() {
-      await delay(1200); // initial pause
+      await delay(1400);
       if (cancelled) return;
-      setCursor(c => ({ ...c, visible: true }));
+      setCursorVis(true);
 
       while (!cancelled) {
         const step = DEMO_SEQUENCE[stepRef.current % DEMO_SEQUENCE.length];
 
-        // move to sidebar first if we're jumping views
-        const pos = getPos(step.target);
+        // For sidebar clicks: get position first (sidebar always in DOM)
+        // For content items: view must be set FIRST then wait for re-render
+        let pos = getPos(step.target);
+
+        // If we can't find the element, set the view and wait for DOM update
+        if (!pos && step.view) {
+          setView(step.view);
+          await delay(180); // wait for React re-render
+          pos = getPos(step.target);
+        }
         if (!pos) { stepRef.current++; continue; }
 
-        setCursor({ x: pos.x, y: pos.y, visible: true });
-        setCursorLabel("");
-        await delay(420); // cursor travel time
-
+        // Move cursor
+        setCursorPos({ x: pos.x, y: pos.y });
+        setStepBanner({ step: "", label: "" }); // clear during travel
+        await delay(480);
         if (cancelled) return;
-        setCursorLabel(step.label); // show label after arriving
+
+        // Show step banner + label
+        setStepBanner({ step: step.step, label: step.label });
 
         if (step.click) {
+          await delay(300);
           setClicking(true);
-          await delay(140);
+          await delay(160);
           setClicking(false);
-          // trigger view change
-          if (step.view) setView(step.view);
+          if (step.view) {
+            setView(step.view);
+            await delay(180); // wait for new view DOM
+          }
           await delay(step.pause);
         } else {
           await delay(step.pause);
@@ -526,7 +538,8 @@ function HeroDashboard() {
         stepRef.current++;
         if (stepRef.current >= DEMO_SEQUENCE.length) {
           stepRef.current = 0;
-          await delay(600); // loop pause
+          setStepBanner({ step: "", label: "" });
+          await delay(800);
         }
       }
     }
@@ -538,49 +551,28 @@ function HeroDashboard() {
   return (
     <div
       ref={containerRef}
-      className="w-full flex h-[580px] bg-custom-card-bg rounded-xl overflow-hidden relative"
+      className="w-full flex h-[600px] bg-custom-card-bg rounded-xl overflow-hidden relative select-none"
       style={{ border: "1px solid rgba(255,255,255,0.05)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.7)" }}
-      onMouseEnter={() => { pauseRef.current = true; }}
-      onMouseLeave={() => { pauseRef.current = false; }}
     >
 
       {/* ── Auto cursor ── */}
-      {cursor.visible && (
+      {cursorVis && (
         <div
           className="pointer-events-none absolute z-50"
           style={{
-            left: cursor.x,
-            top:  cursor.y,
-            transform: "translate(-4px, -4px)",
-            transition: "left 400ms cubic-bezier(0.25,0.46,0.45,0.94), top 400ms cubic-bezier(0.25,0.46,0.45,0.94)",
+            left: cursorPos.x,
+            top:  cursorPos.y,
+            transform: "translate(-3px, -2px)",
+            transition: "left 460ms cubic-bezier(0.22,1,0.36,1), top 460ms cubic-bezier(0.22,1,0.36,1)",
+            filter: clicking ? "drop-shadow(0 0 6px #5E6BFF)" : "drop-shadow(0 1px 3px rgba(0,0,0,0.8))",
           }}
         >
-          {/* cursor SVG */}
-          <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
-            <path d="M0 0L0 18L4.5 13.5L8 21L10.5 20L7 12.5L13 12.5Z" fill="white"/>
-            <path d="M0 0L0 18L4.5 13.5L8 21L10.5 20L7 12.5L13 12.5Z" stroke="#333" strokeWidth="0.8"/>
+          <svg width="22" height="27" viewBox="0 0 22 27" fill="none">
+            <path d="M1 1L1 22L6 16.5L10 25.5L13.5 24L9.5 15.5L17 15.5Z" fill="white" stroke="#1a1a1a" strokeWidth="1.2" strokeLinejoin="round"/>
           </svg>
-          {/* click ripple */}
           {clicking && (
-            <div className="absolute rounded-full border border-white/60"
-              style={{ width: 28, height: 28, top: -10, left: -10, animation: "cursorClick 0.35s ease-out forwards" }} />
-          )}
-          {/* context label */}
-          {cursorLabel && (
-            <div className="absolute whitespace-nowrap font-mono-data text-[10px] font-semibold px-2.5 py-1 rounded-full animate-fade-in"
-              style={{
-                left: 20, top: -28,
-                background: "rgba(14,14,15,0.96)",
-                border: "1px solid rgba(94,107,255,0.4)",
-                color: "#bec2ff",
-                backdropFilter: "blur(8px)",
-                boxShadow: "0 2px 12px rgba(94,107,255,0.2)",
-                maxWidth: 280,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}>
-              {cursorLabel}
-            </div>
+            <div className="absolute rounded-full"
+              style={{ width: 32, height: 32, top: -12, left: -12, border: "1.5px solid rgba(94,107,255,0.7)", animation: "cursorClick 0.4s ease-out forwards" }} />
           )}
         </div>
       )}
@@ -613,28 +605,38 @@ function HeroDashboard() {
             );
           })}
         </div>
-        <div className="mt-auto p-2 border-t border-custom-divider">
-          <button
-            data-demo="launch-scanner"
-            onClick={() => setView("command")}
-            className="w-full bg-custom-btn-primary text-white rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider hover:brightness-110 transition-all"
-          >
-            ⚡ Launch Scanner
-          </button>
+        {/* version footer — no launch scanner button */}
+        <div className="mt-auto px-4 py-3 border-t border-custom-divider">
+          <div className="font-mono-data text-[9px] text-custom-text-muted">sork.ai · always on</div>
         </div>
       </div>
 
       {/* ── Main pane ── */}
       <div className="flex-1 bg-[#0a0a0b] flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-custom-divider-light" style={{ background: "#0e0e0f" }}>
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-            <span className="font-mono-data text-[10px] text-secondary uppercase tracking-widest font-bold">Pipeline Live</span>
+
+        {/* Step banner — shows what the demo is doing */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-custom-divider-light flex-shrink-0"
+          style={{ background: "#0c0c0d", minHeight: 44 }}>
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse flex-shrink-0" />
+            {stepBanner.step ? (
+              <>
+                <span className="font-mono-data text-[10px] text-secondary font-bold tracking-widest flex-shrink-0 uppercase">
+                  {stepBanner.step}
+                </span>
+                <span className="font-mono-data text-[10px] text-custom-text-muted truncate">
+                  {stepBanner.label}
+                </span>
+              </>
+            ) : (
+              <span className="font-mono-data text-[10px] text-secondary uppercase tracking-widest font-bold">Pipeline Live</span>
+            )}
           </div>
-          <div className="font-mono-data text-[9px] text-custom-text-muted uppercase tracking-widest">
+          <span className="font-mono-data text-[9px] text-custom-text-muted uppercase tracking-widest flex-shrink-0 ml-4">
             LAST SCAN: <span className="text-on-surface">Just now</span>
-          </div>
+          </span>
         </div>
+
         <div className="flex-1 overflow-y-auto p-4">
           <CenterPane view={view} />
         </div>
@@ -643,11 +645,10 @@ function HeroDashboard() {
       {/* ── Sork.ai panel ── */}
       <SorkPanel view={view} />
 
-      {/* cursor click keyframe */}
       <style>{`
         @keyframes cursorClick {
-          0%   { transform: scale(0.3); opacity: 1; }
-          100% { transform: scale(1.8); opacity: 0; }
+          0%   { transform: scale(0.2); opacity: 1; }
+          100% { transform: scale(2.2); opacity: 0; }
         }
       `}</style>
     </div>
