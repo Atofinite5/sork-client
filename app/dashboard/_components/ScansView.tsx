@@ -210,11 +210,12 @@ function SeverityDonut({ critical, high, medium, low }: { critical: number; high
 
 /** Fix rate gauge */
 function FixRateGauge({ rate, fixed, total }: { rate: number; fixed: number; total: number }) {
-  const W = 200, H = 110;
-  const cx = W / 2, cy = H - 10;
-  const R = 80, r = 58;
+  const [hovered, setHovered] = useState(false);
+  const W = 220, H = 140;
+  const cx = W / 2, cy = 105;
+  const R = 80, r = 60;
   const clamp = Math.max(0, Math.min(100, rate));
-  const startA = Math.PI, endA = startA + (clamp / 100) * Math.PI;
+  const endA = Math.PI + (clamp / 100) * Math.PI;
 
   const arc = (a1: number, a2: number, ro: number, ri: number) => {
     const x1 = cx + ro * Math.cos(a1), y1 = cy + ro * Math.sin(a1);
@@ -224,19 +225,98 @@ function FixRateGauge({ rate, fixed, total }: { rate: number; fixed: number; tot
     return `M${xis},${yis} A${ri},${ri} 0 0,1 ${xi},${yi} L${x2},${y2} A${ro},${ro} 0 0,0 ${x1},${y1} Z`;
   };
 
+  const color = rate >= 70 ? T.green : rate >= 40 ? T.amber : T.error;
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H }}>
-      {/* bg arc */}
-      <path d={arc(Math.PI, 2 * Math.PI, R, r)} fill={T.b1} />
-      {/* value arc */}
-      {clamp > 0 && <path d={arc(Math.PI, endA, R, r)} fill={T.green} opacity="0.85" />}
-      {/* labels */}
-      <text x={cx - R - 4} y={cy + 3} fill={T.muted} fontSize="9" fontFamily="monospace" textAnchor="middle">0%</text>
-      <text x={cx + R + 4} y={cy + 3} fill={T.muted} fontSize="9" fontFamily="monospace" textAnchor="middle">100%</text>
-      <text x={cx} y={cy - 22} fill={T.green} fontSize="28" fontWeight="700" fontFamily="Manrope" textAnchor="middle">{rate}%</text>
-      <text x={cx} y={cy - 6} fill={T.muted} fontSize="9" fontFamily="monospace" textAnchor="middle">FIX RATE</text>
-      <text x={cx} y={cy + 12} fill={T.sub} fontSize="10" fontFamily="monospace" textAnchor="middle">{fixed} fixed of {total} found</text>
-    </svg>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ position: "relative", cursor: "default", borderRadius: 4, transition: "box-shadow 0.3s" ,
+        boxShadow: hovered ? `0 0 0 1px ${color}40, 0 0 24px ${color}18` : "none" }}
+    >
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H, display: "block" }}>
+        <defs>
+          {/* shimmer gradient — sweeps on hover */}
+          <linearGradient id="gauge-shimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor={color} stopOpacity="0.6" />
+            <stop offset="50%"  stopColor="white" stopOpacity={hovered ? "0.95" : "0"} />
+            <stop offset="100%" stopColor={color} stopOpacity="0.6" />
+            {hovered && (
+              <animateTransform
+                attributeName="gradientTransform"
+                type="translate"
+                from="-1 0" to="1 0"
+                dur="1.2s" repeatCount="indefinite"
+              />
+            )}
+          </linearGradient>
+          {/* tick marks clip */}
+          <clipPath id="gauge-clip">
+            <path d={arc(Math.PI, 2 * Math.PI, R + 6, r - 6)} />
+          </clipPath>
+        </defs>
+
+        {/* Background track with tick marks */}
+        <path d={arc(Math.PI, 2 * Math.PI, R, r)} fill={T.b1} />
+        {/* Tick marks */}
+        {Array.from({ length: 11 }, (_, i) => {
+          const a = Math.PI + (i / 10) * Math.PI;
+          const isMajor = i % 5 === 0;
+          const r1 = R + (isMajor ? 6 : 3);
+          const r2 = R + (isMajor ? 10 : 6);
+          return (
+            <line key={i}
+              x1={cx + r1 * Math.cos(a)} y1={cy + r1 * Math.sin(a)}
+              x2={cx + r2 * Math.cos(a)} y2={cy + r2 * Math.sin(a)}
+              stroke={isMajor ? T.b3 : T.b2} strokeWidth={isMajor ? "1.5" : "0.8"}
+            />
+          );
+        })}
+
+        {/* Filled arc */}
+        {clamp > 0 && (
+          <path d={arc(Math.PI, endA, R, r)}
+            fill={hovered ? `url(#gauge-shimmer)` : color}
+            opacity={hovered ? "1" : "0.85"}
+            style={{ transition: "opacity 0.3s" }}
+          />
+        )}
+
+        {/* Needle */}
+        {(() => {
+          const a = Math.PI + (clamp / 100) * Math.PI;
+          const nx = cx + (r - 4) * Math.cos(a);
+          const ny = cy + (r - 4) * Math.sin(a);
+          return (
+            <>
+              <line x1={cx} y1={cy} x2={nx} y2={ny}
+                stroke={color} strokeWidth="2" strokeLinecap="round"
+                style={{ filter: hovered ? `drop-shadow(0 0 4px ${color})` : "none", transition: "filter 0.3s" }} />
+              <circle cx={cx} cy={cy} r="4" fill={T.card} stroke={color} strokeWidth="1.5" />
+            </>
+          );
+        })()}
+
+        {/* 0% / 100% labels */}
+        <text x={cx - R - 2} y={cy + 16} fill={T.muted} fontSize="9" fontFamily="monospace" textAnchor="middle">0%</text>
+        <text x={cx + R + 2} y={cy + 16} fill={T.muted} fontSize="9" fontFamily="monospace" textAnchor="middle">100%</text>
+
+        {/* Center value */}
+        <text x={cx} y={cy - 20} fill={color} fontSize="32" fontWeight="700" fontFamily="Manrope" textAnchor="middle"
+          style={{ filter: hovered ? `drop-shadow(0 0 8px ${color}88)` : "none", transition: "filter 0.3s" }}>
+          {rate}%
+        </text>
+        <text x={cx} y={cy - 4} fill={T.muted} fontSize="9" fontFamily="monospace" textAnchor="middle" letterSpacing="0.1em">FIX RATE</text>
+        <text x={cx} y={cy + 14} fill={T.sub} fontSize="10" fontFamily="monospace" textAnchor="middle">
+          {fixed} fixed of {total} found
+        </text>
+
+        {/* Hover hint */}
+        {!hovered && (
+          <text x={cx} y={cy + 28} fill={T.b3} fontSize="8" fontFamily="monospace" textAnchor="middle">hover to illuminate</text>
+        )}
+      </svg>
+    </div>
   );
 }
 
