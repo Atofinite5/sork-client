@@ -272,101 +272,170 @@ function CenterPane({ view }: { view: HeroView }) {
 }
 
 /* ─── Right Sork.ai panel ────────────────────────────── */
-function SorkPanel({ view }: { view: HeroView }) {
-  const insights: Record<HeroView, { title: string; body: string; accent: string }[]> = {
-    command: [
-      { title: "Recommended Action", body: "Fix auth.ts:47 SQL injection before next deploy — CWE-89, confidence 98%. Estimated time: 2 min.", accent: "#bec2ff" },
-      { title: "Signal Summary",     body: "Code quality up +5% this week. Null crash patterns emerging in new Go routes — triage running.", accent: "#50d8e9" },
+/* ─── Chat exchanges that auto-type in Sork.ai panel ─── */
+const CHAT_EXCHANGES = [
+  {
+    cmd: "sork scan ./src",
+    lines: [
+      { t: "Scanning 47 files...",                          c: "#9A9DA3" },
+      { t: "CRITICAL auth.ts:47 — SQL injection (CWE-89)", c: "#ffb4ab" },
+      { t: "HIGH handler.go:34 — null dereference",        c: "#ffb689" },
+      { t: "Blocking your commit. Run sork fix to patch.", c: "#bec2ff" },
     ],
-    scans: [
-      { title: "Scan Summary",   body: "3 critical issues detected across TypeScript and Python. 2 issues auto-triaged and ready for patch.", accent: "#ffb4ab" },
-      { title: "Top Risk File",  body: "src/api/auth.ts — 2 critical findings. CWE-89 and CWE-287. Recommend immediate patch.", accent: "#bec2ff" },
+  },
+  {
+    cmd: "sork fix auth.ts",
+    lines: [
+      { t: "Patch generated — 2 lines changed, nothing else.", c: "#9A9DA3" },
+      { t: "Verify score: 98/100. Zero new vulnerabilities.",  c: "#92f1ff" },
+      { t: "Your commit is now secure and error-free. ✓",     c: "#92f1ff" },
     ],
-    fixes: [
-      { title: "Patch Quality",   body: "Groq llama-3.3-70b generated minimal diffs. Changes are isolated to vulnerable lines only.", accent: "#92f1ff" },
-      { title: "Hybrid Memory",   body: "Cohere context: similar SQL injection was patched in db/legacy.ts 3 weeks ago — using same pattern.", accent: "#bec2ff" },
+  },
+  {
+    cmd: "sork doctor",
+    lines: [
+      { t: "Health: 87/100 · 0 secrets exposed",         c: "#9A9DA3" },
+      { t: "0 hallucinated APIs in AI-generated code ✓", c: "#92f1ff" },
+      { t: "Last 7 commits: all passed SORK gate ✓",     c: "#bec2ff" },
     ],
-    verified: [
-      { title: "Verify Gate",   body: "All fixes scored above 80/100 threshold. Zero residual issues detected after re-scan.", accent: "#92f1ff" },
-      { title: "Deploy Status", body: "auth.ts, main.go, and parser.py are clean and deploy-ready. No new vulnerabilities introduced.", accent: "#50d8e9" },
+  },
+  {
+    cmd: "git push origin main",
+    lines: [
+      { t: "SORK gate running pre-push check...",    c: "#9A9DA3" },
+      { t: "✓ No critical issues. ✓ No AI artifacts.", c: "#92f1ff" },
+      { t: "Push approved. Your code ships clean.",  c: "#50d8e9" },
     ],
-    keys: [
-      { title: "Key Health",    body: "2 of 3 license keys are healthy. staging-key approaching monthly limit — consider upgrading plan.", accent: "#ffb689" },
-      { title: "BYOK Active",   body: "Groq and Cohere BYOK keys are active and healthy. Using your own quota — bypassing shared limits.", accent: "#50d8e9" },
-    ],
-    reports: [
-      { title: "Weekly Insight",  body: "Scan velocity increased 34% this week. Fix rate holding at 66%. Quality score trending upward.", accent: "#92f1ff" },
-      { title: "High-Risk Files", body: "auth.ts and routes/admin.ts flagged 3× in the last 7 days. Consider a focused security review.", accent: "#ffb4ab" },
-    ],
-  };
+  },
+];
 
-  const log: Record<HeroView, { action: string; time: string; dot: string }[]> = {
-    command:  [{ action: "auth.ts patched",     time: "2m ago",  dot: "#bec2ff" }, { action: "queries.ts verified", time: "8m ago",  dot: "rgba(255,255,255,0.2)" }, { action: "deploy.py clean", time: "24m ago", dot: "#92f1ff" }],
-    scans:    [{ action: "New scan started",     time: "Just now", dot: "#50d8e9" }, { action: "Triage complete",     time: "1m ago",  dot: "#bec2ff" }, { action: "3 issues found", time: "1m ago", dot: "#ffb4ab" }],
-    fixes:    [{ action: "Patch generated",      time: "30s ago",  dot: "#92f1ff" }, { action: "CWE-89 addressed",    time: "1m ago",  dot: "#bec2ff" }, { action: "Awaiting apply",  time: "1m ago", dot: "#ffb689" }],
-    verified: [{ action: "auth.ts → score 98",   time: "5m ago",  dot: "#92f1ff" }, { action: "main.go → score 94",  time: "12m ago", dot: "#92f1ff" }, { action: "parser.py → score 88", time: "18m ago", dot: "#bec2ff" }],
-    keys:     [{ action: "prod-key-01 active",   time: "Active",  dot: "#92f1ff" }, { action: "BYOK Groq healthy",   time: "Active",  dot: "#50d8e9" }, { action: "staging-key limited", time: "Warning", dot: "#ffb689" }],
-    reports:  [{ action: "Health score: 87",     time: "Latest",  dot: "#92f1ff" }, { action: "Scan #2841 complete", time: "2h ago",  dot: "#bec2ff" }, { action: "34% velocity +",      time: "This week", dot: "#50d8e9" }],
+function ChatTypingDemo() {
+  const [exIdx,    setExIdx]    = useState(0);
+  const [typed,    setTyped]    = useState("");
+  const [lines,    setLines]    = useState<{ t: string; c: string }[]>([]);
+  const [showResp, setShowResp] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
+    async function run() {
+      const ex = CHAT_EXCHANGES[exIdx];
+      setTyped(""); setLines([]); setShowResp(false);
+      await sleep(400);
+
+      // type command char by char
+      for (let i = 1; i <= ex.cmd.length; i++) {
+        if (cancelled) return;
+        setTyped(ex.cmd.slice(0, i));
+        await sleep(42 + Math.random() * 28);
+      }
+      await sleep(360);
+      if (cancelled) return;
+      setShowResp(true);
+
+      // reveal response lines one by one
+      for (let i = 0; i < ex.lines.length; i++) {
+        if (cancelled) return;
+        await sleep(320);
+        setLines(prev => [...prev, ex.lines[i]]);
+      }
+      await sleep(2400);
+      if (!cancelled) setExIdx(i => (i + 1) % CHAT_EXCHANGES.length);
+    }
+
+    run();
+    return () => { cancelled = true; };
+  }, [exIdx]);
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: "#070708", border: "1px solid #1B1C1E" }}>
+      {/* terminal bar */}
+      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-custom-divider-light">
+        <span className="w-2 h-2 rounded-full" style={{ background: "#ffb4ab" }} />
+        <span className="w-2 h-2 rounded-full" style={{ background: "#ffb689" }} />
+        <span className="w-2 h-2 rounded-full" style={{ background: "#92f1ff" }} />
+        <span className="ml-2 text-[9px] text-custom-text-muted font-mono-data">sork — terminal</span>
+      </div>
+      <div className="p-3 font-mono-data text-[11px] leading-relaxed min-h-[96px]">
+        {/* prompt line */}
+        <div className="flex items-center gap-1.5 mb-1">
+          <span style={{ color: "#50d8e9" }}>$</span>
+          <span style={{ color: "#e5e2e3" }}>{typed}</span>
+          <span className="inline-block w-[6px] h-[12px] animate-pulse" style={{ background: "#50d8e9", opacity: showResp ? 0 : 1 }} />
+        </div>
+        {/* response lines */}
+        {showResp && lines.map((l, i) => (
+          <div key={i} className="flex items-start gap-1.5 animate-fade-in" style={{ color: l.c }}>
+            <span style={{ color: "#454655", flexShrink: 0 }}>→</span>
+            <span>{l.t}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SorkPanel({ view }: { view: HeroView }) {
+  const topCard: Record<HeroView, { title: string; body: string }> = {
+    command:  { title: "Recommended Action", body: "Fix auth.ts:47 SQL injection before next deploy — this would have shipped a critical bug to prod." },
+    scans:    { title: "Scan Summary",       body: "3 critical issues found. CWE-89 in auth.ts would break authentication on next commit." },
+    fixes:    { title: "Patch Quality",      body: "Minimal diff — only 2 lines changed. Cohere memory matched this pattern from 3 weeks ago." },
+    verified: { title: "Verify Gate",        body: "All 3 fixes scored ≥ 80/100. Zero residual issues. Commits are clean and deploy-ready." },
+    keys:     { title: "Key Health",         body: "2 keys active. BYOK bypasses shared quota. Keys are AES-256-GCM encrypted at rest." },
+    reports:  { title: "Weekly Insight",     body: "Scan velocity +34%. Quality score up +5%. 0 hallucinated APIs in AI-generated code." },
   };
 
   const blockCard: Record<HeroView, { label: string; body: string; cta: string; color: string }> = {
-    command:  { label: "Blocking Fix",     body: "SQL injection in auth.ts:47 must be resolved before next deploy.", cta: "✓ Apply Fix",    color: "#ffb689" },
-    scans:    { label: "New Scan Ready",   body: "27 files queued. Run sork scan to start the full pipeline.", cta: "▶ Start Scan",   color: "#50d8e9" },
-    fixes:    { label: "2 Fixes Pending",  body: "CWE-89 and CWE-476 patches are ready to apply.",              cta: "Apply All",      color: "#92f1ff" },
-    verified: { label: "Deploy Gate",      body: "3 fixes verified (score ≥ 80). Ready to merge and ship.",      cta: "Mark Deployed",  color: "#92f1ff" },
-    keys:     { label: "Key Expiring",     body: "staging-key approaches monthly limit. Rotate or upgrade plan.", cta: "Manage Keys",   color: "#ffb689" },
-    reports:  { label: "Doctor Report",    body: "Run sork doctor for full project health breakdown.", cta: "View Report",    color: "#bec2ff" },
+    command:  { label: "Blocking Fix",    body: "SQL injection in auth.ts:47 must be resolved before deploy.", cta: "✓ Apply Fix",   color: "#ffb689" },
+    scans:    { label: "New Scan Ready",  body: "27 files queued. SORK will block your push if critical issues are found.", cta: "▶ Start Scan",  color: "#50d8e9" },
+    fixes:    { label: "2 Fixes Pending", body: "CWE-89 and CWE-476 patches ready. Apply to make your next commit error-free.", cta: "Apply All",     color: "#92f1ff" },
+    verified: { label: "Deploy Gate",     body: "3 fixes verified (score ≥ 80). Your commits are secure and ship-ready.",      cta: "Mark Deployed", color: "#92f1ff" },
+    keys:     { label: "Key Expiring",    body: "staging-key near limit. All keys are encrypted — your credentials are safe.",  cta: "Manage Keys",  color: "#ffb689" },
+    reports:  { label: "Health Report",   body: "Run sork doctor for full score breakdown and AI artifact detection.",          cta: "View Report",   color: "#bec2ff" },
   };
 
   const card = blockCard[view];
-  const items = insights[view];
-  const logItems = log[view];
+  const top  = topCard[view];
 
   return (
     <div className="w-[300px] bg-custom-panel border-l border-custom-divider flex flex-col flex-shrink-0">
-      <div className="px-5 py-4 border-b border-custom-divider-light flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="text-secondary text-[16px]">⚡</span>
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-custom-divider-light flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span style={{ color: "#50d8e9", fontSize: 14 }}>⚡</span>
           <span className="font-mono-data text-[11px] uppercase tracking-widest font-bold text-on-surface">Sork.ai</span>
         </div>
         <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-        {items.map(item => (
-          <div key={item.title}>
-            <div className="text-[9px] text-custom-text-muted uppercase tracking-widest font-mono-data font-bold mb-2">{item.title}</div>
-            <div className="text-[12px] text-on-surface leading-relaxed rounded-xl p-3"
-              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-              {item.body}
-            </div>
-          </div>
-        ))}
-        <div>
-          <div className="text-[9px] text-custom-text-muted uppercase tracking-widest font-mono-data font-bold mb-2">Decision Log</div>
-          {logItems.map(l => (
-            <div key={l.action} className="flex items-start gap-3 py-2 border-b border-custom-divider-light last:border-0">
-              <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: l.dot }} />
-              <div>
-                <div className="text-[11px] text-on-surface font-medium">{l.action}</div>
-                <div className="text-[10px] text-custom-text-muted font-mono-data mt-0.5">{l.time}</div>
-              </div>
-            </div>
-          ))}
+      {/* Top insight card */}
+      <div className="px-4 pt-3 flex-shrink-0">
+        <div className="text-[9px] text-custom-text-muted uppercase tracking-widest font-mono-data font-bold mb-1.5">{top.title}</div>
+        <div className="text-[11px] text-on-surface leading-relaxed rounded-lg p-2.5 mb-3"
+          style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+          {top.body}
         </div>
       </div>
 
+      {/* Live typing terminal */}
+      <div className="px-4 flex-shrink-0">
+        <div className="text-[9px] text-custom-text-muted uppercase tracking-widest font-mono-data font-bold mb-1.5">Live Demo</div>
+        <ChatTypingDemo />
+      </div>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
       {/* Floating action card */}
-      <div className="m-3" style={{ background: "rgba(20,21,23,0.9)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 16, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px]"
-              style={{ background: `${card.color}18`, color: card.color }}>!</div>
-            <span className="text-[10px] font-mono-data uppercase tracking-widest font-bold text-on-surface">{card.label}</span>
-          </div>
+      <div className="m-3 flex-shrink-0" style={{ background: "rgba(20,21,23,0.95)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "12px 14px", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0"
+            style={{ background: `${card.color}18`, color: card.color }}>!</div>
+          <span className="text-[10px] font-mono-data uppercase tracking-widest font-bold text-on-surface">{card.label}</span>
         </div>
-        <div className="text-[12px] text-on-surface mb-3 leading-relaxed">{card.body}</div>
-        <button className="w-full text-white py-2 rounded-lg text-label-sm font-bold uppercase tracking-wider transition-all hover:brightness-110"
+        <div className="text-[11px] text-on-surface mb-2.5 leading-relaxed">{card.body}</div>
+        <button className="w-full text-white py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:brightness-110"
           style={{ background: "#5E6BFF" }}>
           {card.cta}
         </button>
@@ -376,29 +445,30 @@ function SorkPanel({ view }: { view: HeroView }) {
 }
 
 /* ─── Auto-demo cursor sequence ──────────────────────── */
-type DemoStep = { target: string; view?: HeroView; click?: boolean; pause: number };
+type DemoStep = { target: string; view?: HeroView; click?: boolean; pause: number; label: string };
 
 const DEMO_SEQUENCE: DemoStep[] = [
-  { target: "sidebar-scans",    view: "scans",    click: true,  pause: 1400 },
-  { target: "scan-row-0",                         click: false, pause: 800  },
-  { target: "scan-review-0",                      click: false, pause: 700  },
-  { target: "sidebar-fixes",    view: "fixes",    click: true,  pause: 1400 },
-  { target: "fix-apply-0",                        click: true,  pause: 1000 },
-  { target: "sidebar-verified", view: "verified", click: true,  pause: 1400 },
-  { target: "verified-item-0",                    click: false, pause: 700  },
-  { target: "sidebar-reports",  view: "reports",  click: true,  pause: 1400 },
-  { target: "reports-chart",                      click: false, pause: 800  },
-  { target: "sidebar-keys",     view: "keys",     click: true,  pause: 1400 },
-  { target: "key-row-0",                          click: false, pause: 700  },
-  { target: "sidebar-command",  view: "command",  click: true,  pause: 1400 },
-  { target: "launch-scanner",                     click: true,  pause: 1200 },
+  { target: "sidebar-scans",    view: "scans",    click: true,  pause: 1400, label: "Scanning codebase for vulnerabilities..." },
+  { target: "scan-row-0",                         click: false, pause: 900,  label: "SQL injection found — your commit was about to break prod" },
+  { target: "scan-review-0",                      click: false, pause: 800,  label: "Reviewing CWE-89 · confidence 98%" },
+  { target: "sidebar-fixes",    view: "fixes",    click: true,  pause: 1400, label: "Generating secure patch..." },
+  { target: "fix-apply-0",                        click: true,  pause: 1100, label: "Minimal diff applied · 2 lines changed · commit is now clean ✓" },
+  { target: "sidebar-verified", view: "verified", click: true,  pause: 1400, label: "Verifying fix — checking for new issues..." },
+  { target: "verified-item-0",                    click: false, pause: 900,  label: "Score 98/100 · zero new vulnerabilities · deploy-ready ✓" },
+  { target: "sidebar-reports",  view: "reports",  click: true,  pause: 1400, label: "Checking code health & AI artifact detection" },
+  { target: "reports-chart",                      click: false, pause: 900,  label: "0 hallucinated APIs · all AI-generated code reviewed ✓" },
+  { target: "sidebar-keys",     view: "keys",     click: true,  pause: 1400, label: "Managing credentials — AES-256-GCM encrypted" },
+  { target: "key-row-0",                          click: false, pause: 800,  label: "Keys are safe · never exposed in logs or responses" },
+  { target: "sidebar-command",  view: "command",  click: true,  pause: 1400, label: "Back to command — every commit protected" },
+  { target: "launch-scanner",                     click: true,  pause: 1200, label: "Launching full pipeline scan..." },
 ];
 
 /* ─── Full hero dashboard ────────────────────────────── */
 function HeroDashboard() {
   const [view, setView]       = useState<HeroView>("command");
-  const [cursor, setCursor]   = useState({ x: 100, y: 83, visible: false });
+  const [cursor, setCursor]     = useState({ x: 100, y: 83, visible: false });
   const [clicking, setClicking] = useState(false);
+  const [cursorLabel, setCursorLabel] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const stepRef      = useRef(0);
   const pauseRef     = useRef(false); // user is interacting
@@ -436,9 +506,11 @@ function HeroDashboard() {
         if (!pos) { stepRef.current++; continue; }
 
         setCursor({ x: pos.x, y: pos.y, visible: true });
-        await delay(420); // cursor travel time (matches CSS transition)
+        setCursorLabel("");
+        await delay(420); // cursor travel time
 
         if (cancelled) return;
+        setCursorLabel(step.label); // show label after arriving
 
         if (step.click) {
           setClicking(true);
@@ -490,14 +562,25 @@ function HeroDashboard() {
           </svg>
           {/* click ripple */}
           {clicking && (
-            <div
-              className="absolute rounded-full border border-white/60"
+            <div className="absolute rounded-full border border-white/60"
+              style={{ width: 28, height: 28, top: -10, left: -10, animation: "cursorClick 0.35s ease-out forwards" }} />
+          )}
+          {/* context label */}
+          {cursorLabel && (
+            <div className="absolute whitespace-nowrap font-mono-data text-[10px] font-semibold px-2.5 py-1 rounded-full animate-fade-in"
               style={{
-                width: 28, height: 28,
-                top: -10, left: -10,
-                animation: "cursorClick 0.35s ease-out forwards",
-              }}
-            />
+                left: 20, top: -28,
+                background: "rgba(14,14,15,0.96)",
+                border: "1px solid rgba(94,107,255,0.4)",
+                color: "#bec2ff",
+                backdropFilter: "blur(8px)",
+                boxShadow: "0 2px 12px rgba(94,107,255,0.2)",
+                maxWidth: 280,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}>
+              {cursorLabel}
+            </div>
           )}
         </div>
       )}
