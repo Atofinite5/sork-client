@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
+import SiteNav from "@/components/SiteNav";
 
 /* ─── Design tokens (exact Romer system) ──────────────── */
 const T = {
@@ -254,40 +255,7 @@ export default function Page() {
     <div style={{ background: T.bg, color: T.text, fontFamily: FONT_UI, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* ── Header ── */}
-      <header style={{ background: `${T.bgLow}dd`, backdropFilter: "blur(12px)", borderBottom: `1px solid ${T.b3}`, position: "sticky", top: 0, zIndex: 50, height: 80 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 1728, margin: "0 auto", padding: "0 32px", height: "100%" }}>
-          <div style={{ fontFamily: FONT_H, fontSize: 24, fontWeight: 700, letterSpacing: "-0.04em" }}>SORK</div>
-          <nav style={{ display: "flex", gap: 24, alignItems: "center" }}>
-            {[
-              { label: "Platform",  href: "#features" },
-              { label: "Docs",      href: "#" },
-              { label: "Pricing",   href: "/pricing" },
-              { label: "Changelog", href: "#" },
-            ].map(l => (
-              <Link key={l.label} href={l.href}
-                style={{ fontSize: 14, color: T.textSub, textDecoration: "none" }}
-                onMouseEnter={e => (e.currentTarget.style.color = T.violet)}
-                onMouseLeave={e => (e.currentTarget.style.color = T.textSub)}>
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            {isSignedIn ? (
-              <Link href="/dashboard" style={{ background: T.brand, color: "#F0F1F2", padding: "8px 16px", borderRadius: 4, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Dashboard</Link>
-            ) : (
-              <>
-                <SignInButton mode="modal">
-                  <button style={{ background: "transparent", border: `1px solid ${T.b2}`, color: T.textSub, padding: "7px 16px", borderRadius: 4, fontSize: 14, cursor: "pointer" }}>Log in</button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button style={{ background: "#fff", color: "#000", padding: "8px 16px", borderRadius: 4, fontSize: 14, fontWeight: 700, cursor: "pointer", border: "none" }}>Start free</button>
-                </SignUpButton>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteNav />
 
       <main style={{ flex: 1 }}>
 
@@ -475,36 +443,6 @@ export default function Page() {
                   { t: "  clean    Project is in good health ✓",         c: T.green },
                 ].map((l, i) => <div key={i} style={{ color: l.c }}>{l.t || " "}</div>)}
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Pricing teaser ── */}
-        <section style={{ borderTop: `1px solid ${T.b1}`, padding: "64px 32px", background: T.bgLow }}>
-          <div style={{ maxWidth: 1000, margin: "0 auto", textAlign: "center" }}>
-            <h2 style={{ fontFamily: FONT_H, fontSize: "clamp(28px,3vw,44px)", lineHeight: 1.2, letterSpacing: "-0.05em", fontWeight: 520, marginBottom: 10 }}>Simple pricing</h2>
-            <p style={{ color: T.muted, fontSize: 15, marginBottom: 40 }}>Start free. Upgrade when you need more.</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
-              {[
-                { name: "Free",     price: "$0",   note: "14 lifetime scans",  features: ["1 license key", "All 3 agents", "Groq-powered", "BYOK support"], highlight: false },
-                { name: "Pro",      price: "$19",  note: "per month",           features: ["Unlimited scans", "5 license keys", "Hybrid memory", "Priority queue"], highlight: true },
-                { name: "Pro Plus", price: "$28",  note: "per month",           features: ["Everything in Pro", "20 license keys", "Team dashboard", "SLA support"], highlight: false },
-              ].map(p => (
-                <div key={p.name} style={{ background: p.highlight ? `${T.brand}18` : T.card, border: `1px solid ${p.highlight ? T.brand : T.b1}`, borderRadius: 4, padding: 24, position: "relative", boxShadow: p.highlight ? `0 0 20px ${T.brand}22` : "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
-                  {p.highlight && <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", background: T.brand, color: "#F0F1F2", fontSize: 10, fontWeight: 600, padding: "3px 12px", borderRadius: "0 0 4px 4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Most popular</div>}
-                  <div style={{ fontFamily: FONT_H, fontSize: 18, fontWeight: 520, marginBottom: 6 }}>{p.name}</div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                    <span style={{ fontFamily: FONT_H, fontSize: 32, fontWeight: 700, letterSpacing: "-0.05em" }}>{p.price}</span>
-                    <span style={{ color: T.muted, fontSize: 13 }}>{p.note}</span>
-                  </div>
-                  <div style={{ borderTop: `1px solid ${T.b1}`, marginTop: 16, paddingTop: 16, display: "flex", flexDirection: "column", gap: 6 }}>
-                    {p.features.map(f => <div key={f} style={{ fontSize: 12, color: T.muted, display: "flex", alignItems: "center", gap: 7 }}><span style={{ color: T.green }}>✓</span>{f}</div>)}
-                  </div>
-                  <Link href="/pricing" style={{ display: "block", marginTop: 20, background: p.highlight ? T.brand : T.card, border: `1px solid ${p.highlight ? T.brand : T.b2}`, color: p.highlight ? "#F0F1F2" : T.text, padding: "9px 0", borderRadius: 4, fontSize: 13, fontWeight: 600, textAlign: "center", textDecoration: "none" }}>
-                    {p.price === "$0" ? "Get started free" : `Get ${p.name}`}
-                  </Link>
-                </div>
-              ))}
             </div>
           </div>
         </section>
