@@ -45,15 +45,47 @@ export default function KeysUsage({ clerkId }: { clerkId: string }) {
 
   if (locked) {
     return (
-      <div className="rounded-2xl border border-border bg-[#0f0f0f] p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Lock className="w-4 h-4 text-[#5c6672]" />
-          <h3 className="text-sm font-semibold text-[#dce1e7]">Per-Key Analytics</h3>
+      <div
+        style={{
+          background: "#101112",
+          border: "1px solid #1B1C1E",
+          borderRadius: 4,
+          padding: "20px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <Lock style={{ width: 16, height: 16, color: "#9A9DA3" }} />
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#e5e2e3",
+              fontFamily: "'Manrope', sans-serif",
+              letterSpacing: "-0.04em",
+              margin: 0,
+            }}
+          >
+            Per-Key Analytics
+          </h3>
         </div>
-        <p className="text-[11px] text-[#5c6672] mb-4">See usage breakdown for every API key you've issued.</p>
-        <Link href="/pricing"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-          style={{ backgroundColor: "#a0e8ef18", color: "#a0e8ef", border: "1px solid #a0e8ef30" }}
+        <p style={{ fontSize: 11, color: "#9A9DA3", marginBottom: 16 }}>
+          See usage breakdown for every API key you've issued.
+        </p>
+        <Link
+          href="/pricing"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 16px",
+            borderRadius: 2,
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#50d8e9",
+            backgroundColor: "#50d8e918",
+            border: "1px solid #50d8e930",
+            textDecoration: "none",
+          }}
         >
           Upgrade to Pro
         </Link>
@@ -63,64 +95,104 @@ export default function KeysUsage({ clerkId }: { clerkId: string }) {
 
   if (!data) {
     return (
-      <div className="rounded-2xl border border-border bg-[#0f0f0f] p-5">
-        <div className="h-24 animate-pulse bg-[#1a1a1a] rounded-xl" />
+      <div
+        style={{
+          background: "#101112",
+          border: "1px solid #1B1C1E",
+          borderRadius: 4,
+          padding: "20px",
+        }}
+      >
+        <div
+          className="animate-pulse"
+          style={{ height: 96, background: "#1B1C1E", borderRadius: 4 }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-[#0f0f0f] overflow-hidden">
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Key className="w-4 h-4 text-[#a0e8ef]" />
+    <div
+      style={{
+        background: "#101112",
+        border: "1px solid #1B1C1E",
+        borderRadius: 4,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "16px 20px",
+          borderBottom: "1px solid #1B1C1E",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Key style={{ width: 16, height: 16, color: "#50d8e9" }} />
           <div>
-            <h3 className="text-sm font-semibold text-[#dce1e7]">Per-Key Analytics</h3>
-            <p className="text-[11px] text-[#5c6672] mt-0.5">{data.keys.length} active key{data.keys.length !== 1 ? "s" : ""} · {data.plan} plan</p>
+            <h3
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#e5e2e3",
+                fontFamily: "'Manrope', sans-serif",
+                letterSpacing: "-0.04em",
+                margin: 0,
+              }}
+            >
+              Per-Key Analytics
+            </h3>
+            <p style={{ fontSize: 11, color: "#9A9DA3", marginTop: 2 }}>
+              {data.keys.length} active key{data.keys.length !== 1 ? "s" : ""} · {data.plan} plan
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs">
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
           <thead>
-            <tr className="border-b border-border">
-              <th className="px-5 py-2.5 text-left text-[#5c6672] font-medium">key</th>
-              <th className="px-4 py-2.5 text-right text-[#5c6672] font-medium">scans</th>
-              <th className="px-4 py-2.5 text-right text-[#5c6672] font-medium">found</th>
-              <th className="px-4 py-2.5 text-right text-[#5c6672] font-medium">fixed</th>
-              <th className="px-5 py-2.5 text-right text-[#5c6672] font-medium">last used</th>
+            <tr style={{ borderBottom: "1px solid #1B1C1E" }}>
+              <th style={{ padding: "10px 20px", textAlign: "left", color: "#9A9DA3", fontWeight: 500 }}>key</th>
+              <th style={{ padding: "10px 16px", textAlign: "right", color: "#9A9DA3", fontWeight: 500 }}>scans</th>
+              <th style={{ padding: "10px 16px", textAlign: "right", color: "#9A9DA3", fontWeight: 500 }}>found</th>
+              <th style={{ padding: "10px 16px", textAlign: "right", color: "#9A9DA3", fontWeight: 500 }}>fixed</th>
+              <th style={{ padding: "10px 20px", textAlign: "right", color: "#9A9DA3", fontWeight: 500 }}>last used</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody>
             {data.keys.map((key, i) => (
               <motion.tr
                 key={key.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.05 }}
-                className="hover:bg-[#111] transition-colors"
+                style={{ borderBottom: "1px solid #1B1C1E" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#0e0e0f")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
-                <td className="px-5 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[#b0b8c1]">{key.keyPrefix}…</span>
-                    <span className="text-[#5c6672]">{key.name}</span>
+                <td style={{ padding: "12px 20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontFamily: "'Inter', monospace", color: "#c6c5d8", fontSize: 12 }}>{key.keyPrefix}…</span>
+                    <span style={{ color: "#9A9DA3", fontSize: 12 }}>{key.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <span className="text-[#a0e8ef]">{key.totalScans}</span>
+                <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                  <span style={{ color: "#50d8e9", fontFamily: "'Inter', monospace" }}>{key.totalScans}</span>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <span style={{ color: key.issuesFound > 0 ? "#ffadad" : "#3d444c" }}>
+                <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                  <span style={{ color: key.issuesFound > 0 ? "#ffb4ab" : "#454655", fontFamily: "'Inter', monospace" }}>
                     {key.issuesFound}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <span style={{ color: key.issuesFixed > 0 ? "#aadfb4" : "#3d444c" }}>
+                <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                  <span style={{ color: key.issuesFixed > 0 ? "#92f1ff" : "#454655", fontFamily: "'Inter', monospace" }}>
                     {key.issuesFixed}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-right text-[#5c6672]">
+                <td style={{ padding: "12px 20px", textAlign: "right", color: "#9A9DA3", fontFamily: "'Inter', monospace" }}>
                   {timeAgo(key.lastUsedAt)}
                 </td>
               </motion.tr>

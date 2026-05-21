@@ -33,73 +33,108 @@ export default function ActivityChart({ clerkId }: { clerkId: string }) {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-[#0f0f0f] p-5">
-      <div className="flex items-center justify-between mb-5">
+    <div
+      style={{
+        background: "#101112",
+        border: "1px solid #1B1C1E",
+        borderRadius: 4,
+        padding: "20px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <h3 className="text-sm font-semibold text-[#dce1e7]">7-Day Activity</h3>
-          <p className="text-[11px] text-[#5c6672] mt-0.5">scans · issues found · issues fixed</p>
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#e5e2e3",
+              fontFamily: "'Manrope', sans-serif",
+              letterSpacing: "-0.04em",
+              margin: 0,
+            }}
+          >
+            7-Day Activity
+          </h3>
+          <p style={{ fontSize: 11, color: "#9A9DA3", marginTop: 2 }}>scans · issues found · issues fixed</p>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-[#5c6672]">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#a0e8ef]" />scans
+        <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 11, color: "#9A9DA3" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#50d8e9", display: "inline-block" }} />
+            scans
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#ffadad]" />found
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#ffb4ab", display: "inline-block" }} />
+            found
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#aadfb4]" />fixed
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#92f1ff", display: "inline-block" }} />
+            fixed
           </span>
         </div>
       </div>
 
       {activity.length === 0 ? (
-        <div className="h-28 flex items-center justify-center text-[#3d444c] text-sm">
+        <div style={{ height: 112, display: "flex", alignItems: "center", justifyContent: "center", color: "#454655", fontSize: 13 }}>
           No scan activity yet — run your first scan
         </div>
       ) : (
-        <div className="flex items-end gap-2 h-28">
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 112 }}>
           {activity.map((day, i) => (
-            <div key={day.date} className="flex-1 flex flex-col items-center gap-1 group">
-              {/* Bars */}
-              <div className="flex-1 w-full flex items-end gap-0.5 relative">
+            <div key={day.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, position: "relative" }} className="group">
+              <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end", gap: 2 }}>
                 {/* Scans bar */}
                 <motion.div
-                  className="flex-1 rounded-t-sm min-h-[2px]"
-                  style={{ backgroundColor: "#a0e8ef22", border: "1px solid #a0e8ef44" }}
+                  style={{ flex: 1, borderRadius: "2px 2px 0 0", minHeight: 2, backgroundColor: "#50d8e922", border: "1px solid #50d8e944" }}
                   initial={{ height: 0 }}
                   animate={{ height: `${(day.scans / maxScans) * 96}px` }}
                   transition={{ duration: 0.5, delay: i * 0.05 }}
                 />
                 {/* Found bar */}
                 <motion.div
-                  className="flex-1 rounded-t-sm min-h-[2px]"
-                  style={{ backgroundColor: "#ffadad22", border: "1px solid #ffadad44" }}
+                  style={{ flex: 1, borderRadius: "2px 2px 0 0", minHeight: 2, backgroundColor: "#ffb4ab22", border: "1px solid #ffb4ab44" }}
                   initial={{ height: 0 }}
                   animate={{ height: `${(day.found / maxFound) * 80}px` }}
                   transition={{ duration: 0.5, delay: i * 0.05 + 0.1 }}
                 />
                 {/* Fixed bar */}
                 <motion.div
-                  className="flex-1 rounded-t-sm min-h-[2px]"
-                  style={{ backgroundColor: "#aadfb422", border: "1px solid #aadfb444" }}
+                  style={{ flex: 1, borderRadius: "2px 2px 0 0", minHeight: 2, backgroundColor: "#92f1ff22", border: "1px solid #92f1ff44" }}
                   initial={{ height: 0 }}
                   animate={{ height: `${(day.fixed / maxFound) * 80}px` }}
                   transition={{ duration: 0.5, delay: i * 0.05 + 0.2 }}
                 />
 
                 {/* Hover tooltip */}
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-10">
-                  <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-2 py-1 text-[10px] text-[#b0b8c1] whitespace-nowrap">
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -40,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    display: "none",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    zIndex: 10,
+                  }}
+                  className="group-hover:!flex"
+                >
+                  <div
+                    style={{
+                      background: "#101112",
+                      border: "1px solid #232426",
+                      borderRadius: 4,
+                      padding: "3px 8px",
+                      fontSize: 10,
+                      color: "#c6c5d8",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {day.scans}s · {day.found}f · {day.fixed}x
                   </div>
-                  <div className="w-1 h-1 bg-[#2a2a2a] rotate-45 -mt-0.5" />
                 </div>
               </div>
 
-              {/* Day label */}
-              <span className="text-[10px] text-[#3d444c] group-hover:text-[#5c6672] transition-colors">
-                {dayLabel(day.date)}
-              </span>
+              <span style={{ fontSize: 10, color: "#454655" }}>{dayLabel(day.date)}</span>
             </div>
           ))}
         </div>

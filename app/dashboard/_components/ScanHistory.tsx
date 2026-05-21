@@ -31,19 +31,41 @@ function timeAgo(iso: string): string {
 
 function SeverityDots({ critical, high }: { critical: number; high: number }) {
   return (
-    <div className="flex items-center gap-1">
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
       {critical > 0 && (
-        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ color: "#ffadad", backgroundColor: "#ffadad15", border: "1px solid #ffadad30" }}>
+        <span
+          style={{
+            padding: "1px 6px",
+            borderRadius: 2,
+            fontSize: 10,
+            fontWeight: 500,
+            color: "#ffb4ab",
+            backgroundColor: "#ffb4ab15",
+            border: "1px solid #ffb4ab30",
+            fontFamily: "'Inter', monospace",
+          }}
+        >
           {critical}c
         </span>
       )}
       {high > 0 && (
-        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ color: "#ffcb8e", backgroundColor: "#ffcb8e15", border: "1px solid #ffcb8e30" }}>
+        <span
+          style={{
+            padding: "1px 6px",
+            borderRadius: 2,
+            fontSize: 10,
+            fontWeight: 500,
+            color: "#ffb689",
+            backgroundColor: "#ffb68915",
+            border: "1px solid #ffb68930",
+            fontFamily: "'Inter', monospace",
+          }}
+        >
           {high}h
         </span>
       )}
       {critical === 0 && high === 0 && (
-        <span className="text-[10px]" style={{ color: "#aadfb4" }}>clean</span>
+        <span style={{ fontSize: 10, color: "#92f1ff" }}>clean</span>
       )}
     </div>
   );
@@ -69,29 +91,78 @@ export default function ScanHistory({ clerkId }: { clerkId: string }) {
   }, [clerkId]);
 
   return (
-    <div className="rounded-2xl border border-border bg-[#0f0f0f] overflow-hidden">
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+    <div
+      style={{
+        background: "#101112",
+        border: "1px solid #1B1C1E",
+        borderRadius: 4,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "16px 20px",
+          borderBottom: "1px solid #1B1C1E",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <div>
-          <h3 className="text-sm font-semibold text-[#dce1e7]">Scan History</h3>
-          <p className="text-[11px] text-[#5c6672] mt-0.5">real-time · auto-refreshes every 30s</p>
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#e5e2e3",
+              fontFamily: "'Manrope', sans-serif",
+              letterSpacing: "-0.04em",
+              margin: 0,
+            }}
+          >
+            Scan History
+          </h3>
+          <p style={{ fontSize: 11, color: "#9A9DA3", marginTop: 2 }}>real-time · auto-refreshes every 30s</p>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#aadfb4] animate-pulse" />
-          <span className="text-[11px] text-[#5c6672]">live</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#92f1ff", display: "inline-block" }} className="animate-pulse" />
+          <span style={{ fontSize: 11, color: "#9A9DA3" }}>live</span>
         </div>
       </div>
 
-      <div className="divide-y divide-border">
+      <div style={{ borderTop: "none" }}>
         {loading ? (
           [...Array(4)].map((_, i) => (
-            <div key={i} className="px-5 py-3 flex items-center gap-3 animate-pulse">
-              <div className="w-6 h-6 rounded bg-[#1a1a1a]" />
-              <div className="flex-1 h-3 bg-[#1a1a1a] rounded" />
+            <div
+              key={i}
+              className="animate-pulse"
+              style={{
+                padding: "12px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                borderBottom: "1px solid #1B1C1E",
+              }}
+            >
+              <div style={{ width: 24, height: 24, borderRadius: 4, background: "#1B1C1E" }} />
+              <div style={{ flex: 1, height: 12, background: "#1B1C1E", borderRadius: 2 }} />
             </div>
           ))
         ) : history.length === 0 ? (
-          <div className="px-5 py-8 text-center text-[#3d444c] text-sm">
-            No scans yet — run <code className="bg-[#1a1a1a] px-1.5 py-0.5 rounded text-[#a0e8ef] font-mono text-xs">sork send ./file.ts</code> to start
+          <div style={{ padding: "32px 20px", textAlign: "center", color: "#454655", fontSize: 13 }}>
+            No scans yet — run{" "}
+            <code
+              style={{
+                background: "#1B1C1E",
+                padding: "2px 6px",
+                borderRadius: 2,
+                color: "#50d8e9",
+                fontFamily: "'Inter', monospace",
+                fontSize: 12,
+              }}
+            >
+              sork send ./file.ts
+            </code>{" "}
+            to start
           </div>
         ) : (
           history.map((scan, i) => (
@@ -100,62 +171,92 @@ export default function ScanHistory({ clerkId }: { clerkId: string }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: i * 0.03 }}
+              style={{ borderBottom: "1px solid #1B1C1E" }}
             >
               <button
-                className="w-full px-5 py-3 flex items-center gap-3 hover:bg-[#111] transition-colors text-left"
+                style={{
+                  width: "100%",
+                  padding: "12px 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#0e0e0f")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 onClick={() => setExpanded(expanded === scan.id ? null : scan.id)}
               >
                 <div
-                  className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{
-                    backgroundColor: scan.status === "error" ? "#ffadad15" : "#a0e8ef15",
-                    border: `1px solid ${scan.status === "error" ? "#ffadad30" : "#a0e8ef30"}`,
+                    width: 24,
+                    height: 24,
+                    borderRadius: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    backgroundColor: scan.status === "error" ? "#ffb4ab15" : "#50d8e915",
+                    border: `1px solid ${scan.status === "error" ? "#ffb4ab30" : "#50d8e930"}`,
                   }}
                 >
                   <FileCode
-                    className="w-3 h-3"
-                    style={{ color: scan.status === "error" ? "#ffadad" : "#a0e8ef" }}
+                    style={{ width: 12, height: 12, color: scan.status === "error" ? "#ffb4ab" : "#50d8e9" }}
                   />
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-[#dce1e7] truncate">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 13, color: "#e5e2e3", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {scan.fileName ?? "unnamed file"}
                     </span>
                     {scan.language && (
-                      <span className="text-[10px] text-[#3d444c] flex-shrink-0">[{scan.language}]</span>
+                      <span style={{ fontSize: 10, color: "#454655", flexShrink: 0, fontFamily: "'Inter', monospace" }}>
+                        [{scan.language}]
+                      </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5">
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 2 }}>
                     <SeverityDots
                       critical={scan.criticalCount ?? 0}
                       high={scan.highCount ?? 0}
                     />
-                    <span className="text-[10px] text-[#3d444c] flex items-center gap-1">
-                      <Clock className="w-2.5 h-2.5" />
+                    <span style={{ fontSize: 10, color: "#454655", display: "flex", alignItems: "center", gap: 4 }}>
+                      <Clock style={{ width: 10, height: 10 }} />
                       {timeAgo(scan.createdAt)}
                     </span>
                     {scan.keyPrefix && (
-                      <span className="text-[10px] text-[#3d444c] font-mono">{scan.keyPrefix}…</span>
+                      <span style={{ fontSize: 10, color: "#454655", fontFamily: "'Inter', monospace" }}>{scan.keyPrefix}…</span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="text-right">
-                    <p className="text-sm font-medium" style={{ color: (scan.issuesFound ?? 0) > 0 ? "#ffadad" : "#aadfb4" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                  <div style={{ textAlign: "right" }}>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: (scan.issuesFound ?? 0) > 0 ? "#ffb4ab" : "#92f1ff",
+                        margin: 0,
+                        fontFamily: "'Inter', monospace",
+                      }}
+                    >
                       {scan.issuesFound ?? 0}
                     </p>
-                    <p className="text-[10px] text-[#3d444c]">found</p>
+                    <p style={{ fontSize: 10, color: "#454655", margin: 0 }}>found</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-[#aadfb4]">{scan.issuesFixed ?? 0}</p>
-                    <p className="text-[10px] text-[#3d444c]">fixed</p>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: "#92f1ff", margin: 0, fontFamily: "'Inter', monospace" }}>
+                      {scan.issuesFixed ?? 0}
+                    </p>
+                    <p style={{ fontSize: 10, color: "#454655", margin: 0 }}>fixed</p>
                   </div>
                   {expanded === scan.id
-                    ? <ChevronDown className="w-3.5 h-3.5 text-[#5c6672]" />
-                    : <ChevronRight className="w-3.5 h-3.5 text-[#5c6672]" />
+                    ? <ChevronDown style={{ width: 14, height: 14, color: "#9A9DA3" }} />
+                    : <ChevronRight style={{ width: 14, height: 14, color: "#9A9DA3" }} />
                   }
                 </div>
               </button>
@@ -166,20 +267,44 @@ export default function ScanHistory({ clerkId }: { clerkId: string }) {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
+                    style={{ overflow: "hidden" }}
                   >
-                    <div className="px-5 pb-3 pt-1 ml-9 space-y-1.5 border-t border-border/50">
-                      <div className="flex items-center gap-6 text-[11px]">
-                        <span><span className="text-[#5c6672]">model  </span><span className="text-[#b0b8c1] font-mono">{scan.model ?? "groq"}</span></span>
-                        <span><span className="text-[#5c6672]">key  </span><span className="text-[#b0b8c1] font-mono">{scan.keyPrefix ? `${scan.keyPrefix}…` : "—"}</span></span>
-                        <span><span className="text-[#5c6672]">status  </span>
-                          <span style={{ color: scan.status === "ok" ? "#aadfb4" : "#ffadad" }}>{scan.status}</span>
+                    <div
+                      style={{
+                        padding: "8px 20px 12px 56px",
+                        borderTop: "1px solid #1B1C1E",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 11, fontFamily: "'Inter', monospace" }}>
+                        <span>
+                          <span style={{ color: "#9A9DA3" }}>model  </span>
+                          <span style={{ color: "#c6c5d8" }}>{scan.model ?? "groq"}</span>
+                        </span>
+                        <span>
+                          <span style={{ color: "#9A9DA3" }}>key  </span>
+                          <span style={{ color: "#c6c5d8" }}>{scan.keyPrefix ? `${scan.keyPrefix}…` : "—"}</span>
+                        </span>
+                        <span>
+                          <span style={{ color: "#9A9DA3" }}>status  </span>
+                          <span style={{ color: scan.status === "ok" ? "#92f1ff" : "#ffb4ab" }}>{scan.status}</span>
                         </span>
                       </div>
-                      <div className="flex items-center gap-6 text-[11px]">
-                        <span><span className="text-[#5c6672]">critical  </span><span style={{ color: (scan.criticalCount ?? 0) > 0 ? "#ffadad" : "#3d444c" }}>{scan.criticalCount ?? 0}</span></span>
-                        <span><span className="text-[#5c6672]">high  </span><span style={{ color: (scan.highCount ?? 0) > 0 ? "#ffcb8e" : "#3d444c" }}>{scan.highCount ?? 0}</span></span>
-                        <span><span className="text-[#5c6672]">fixed  </span><span className="text-[#aadfb4]">{scan.issuesFixed ?? 0}</span></span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 11, fontFamily: "'Inter', monospace" }}>
+                        <span>
+                          <span style={{ color: "#9A9DA3" }}>critical  </span>
+                          <span style={{ color: (scan.criticalCount ?? 0) > 0 ? "#ffb4ab" : "#454655" }}>{scan.criticalCount ?? 0}</span>
+                        </span>
+                        <span>
+                          <span style={{ color: "#9A9DA3" }}>high  </span>
+                          <span style={{ color: (scan.highCount ?? 0) > 0 ? "#ffb689" : "#454655" }}>{scan.highCount ?? 0}</span>
+                        </span>
+                        <span>
+                          <span style={{ color: "#9A9DA3" }}>fixed  </span>
+                          <span style={{ color: "#92f1ff" }}>{scan.issuesFixed ?? 0}</span>
+                        </span>
                       </div>
                     </div>
                   </motion.div>

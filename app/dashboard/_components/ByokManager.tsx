@@ -29,21 +29,19 @@ const PROVIDERS = [
 ];
 
 const PROVIDER_COLORS: Record<string, string> = {
-  groq:      "#ffcb8e",
-  anthropic: "#d4bdff",
-  nvidia:    "#a0e8ef",
-  openai:    "#aadfb4",
-  cohere:    "#ffadad",
-  custom:    "#b0b8c1",
+  groq:      "#ffb689",
+  anthropic: "#bec2ff",
+  nvidia:    "#50d8e9",
+  openai:    "#92f1ff",
+  cohere:    "#ffb4ab",
+  custom:    "#c6c5d8",
 };
 
-// Status dot component with pastel blink animation
 function StatusDot({ status }: { status: KeyStatus }) {
   if (status === "checking") {
     return (
       <motion.div
-        className="w-2 h-2 rounded-full"
-        style={{ backgroundColor: "#b5d5ff" }}
+        style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#bec2ff" }}
         animate={{ opacity: [0.4, 1, 0.4] }}
         transition={{ duration: 1, repeat: Infinity }}
       />
@@ -51,31 +49,47 @@ function StatusDot({ status }: { status: KeyStatus }) {
   }
 
   const config: Record<string, { color: string; label: string; pulse: boolean }> = {
-    ok:       { color: "#aadfb4", label: "working",  pulse: true  },
-    limited:  { color: "#fff3a3", label: "limited",  pulse: true  },
-    error:    { color: "#ffadad", label: "invalid",  pulse: false },
-    inactive: { color: "#3d444c", label: "inactive", pulse: false },
-    unknown:  { color: "#5c6672", label: "unknown",  pulse: false },
+    ok:       { color: "#92f1ff",  label: "working",  pulse: true  },
+    limited:  { color: "#E5FD17",  label: "limited",  pulse: true  },
+    error:    { color: "#ffb4ab",  label: "invalid",  pulse: false },
+    inactive: { color: "#454655",  label: "inactive", pulse: false },
+    unknown:  { color: "#9A9DA3",  label: "unknown",  pulse: false },
   };
 
   const cfg = config[status] ?? config.unknown;
 
   return (
-    <div className="flex items-center gap-1.5" title={cfg.label}>
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }} title={cfg.label}>
       {cfg.pulse ? (
-        <span className="relative flex h-2 w-2">
+        <span style={{ position: "relative", display: "flex", width: 8, height: 8 }}>
           <motion.span
-            className="absolute inline-flex h-full w-full rounded-full opacity-75"
-            style={{ backgroundColor: cfg.color }}
+            style={{
+              position: "absolute",
+              display: "inline-flex",
+              width: "100%",
+              height: "100%",
+              borderRadius: "50%",
+              backgroundColor: cfg.color,
+              opacity: 0.75,
+            }}
             animate={{ scale: [1, 1.8, 1], opacity: [0.75, 0, 0.75] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
-          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: cfg.color }} />
+          <span
+            style={{
+              position: "relative",
+              display: "inline-flex",
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              backgroundColor: cfg.color,
+            }}
+          />
         </span>
       ) : (
-        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: cfg.color }} />
+        <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: cfg.color, display: "inline-block" }} />
       )}
-      <span className="text-[10px]" style={{ color: cfg.color }}>{cfg.label}</span>
+      <span style={{ fontSize: 10, color: cfg.color }}>{cfg.label}</span>
     </div>
   );
 }
@@ -143,30 +157,102 @@ export default function ByokManager({ clerkId }: { clerkId: string }) {
 
   const selectedProvider = PROVIDERS.find(p => p.value === form.provider);
 
+  const inputStyle: React.CSSProperties = {
+    background: "#0a0a0b",
+    border: "1px solid #1B1C1E",
+    borderRadius: 2,
+    padding: "8px 12px",
+    fontSize: 13,
+    color: "#e5e2e3",
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
+  };
+
   return (
-    <div className="rounded-2xl border border-border bg-[#0f0f0f] overflow-hidden">
+    <div
+      style={{
+        background: "#101112",
+        border: "1px solid #1B1C1E",
+        borderRadius: 4,
+        overflow: "hidden",
+      }}
+    >
       {/* Header */}
-      <div className="border-b border-border px-5 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-[#a0e8ef15] border border-[#a0e8ef30] flex items-center justify-center">
-            <Key className="w-4 h-4 text-[#a0e8ef]" />
+      <div
+        style={{
+          borderBottom: "1px solid #1B1C1E",
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 4,
+              backgroundColor: "#50d8e915",
+              border: "1px solid #50d8e930",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Key style={{ width: 16, height: 16, color: "#50d8e9" }} />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-[#dce1e7]">API Credentials</h2>
-            <p className="text-[11px] text-[#5c6672] mt-0.5">bring your own keys · live status check</p>
+            <h2
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#e5e2e3",
+                fontFamily: "'Manrope', sans-serif",
+                letterSpacing: "-0.04em",
+                margin: 0,
+              }}
+            >
+              API Credentials
+            </h2>
+            <p style={{ fontSize: 11, color: "#9A9DA3", margin: "2px 0 0 0" }}>bring your own keys · live status check</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {keys.length > 0 && (
-            <button onClick={checkStatuses} disabled={checking}
-              className="text-[11px] text-[#5c6672] hover:text-[#b0b8c1] transition-colors disabled:opacity-40">
+            <button
+              onClick={checkStatuses}
+              disabled={checking}
+              style={{
+                fontSize: 11,
+                color: checking ? "#454655" : "#9A9DA3",
+                background: "none",
+                border: "none",
+                cursor: checking ? "not-allowed" : "pointer",
+                opacity: checking ? 0.4 : 1,
+              }}
+            >
               {checking ? "checking..." : "recheck"}
             </button>
           )}
-          <button onClick={() => setShowForm(v => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
-            style={{ backgroundColor: "#a0e8ef18", color: "#a0e8ef", border: "1px solid #a0e8ef30" }}>
-            <Plus className="w-3 h-3" /> Add key
+          <button
+            onClick={() => setShowForm(v => !v)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "7px 16px",
+              borderRadius: 2,
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#50d8e9",
+              backgroundColor: "#50d8e918",
+              border: "1px solid #50d8e930",
+              cursor: "pointer",
+            }}
+          >
+            <Plus style={{ width: 12, height: 12 }} /> Add key
           </button>
         </div>
       </div>
@@ -174,40 +260,100 @@ export default function ByokManager({ clerkId }: { clerkId: string }) {
       {/* Add key form */}
       <AnimatePresence>
         {showForm && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <div className="px-5 py-4 border-b border-border space-y-3 bg-[#0a0a0a]">
-              <p className="text-[11px] text-[#5c6672] font-medium uppercase tracking-wider">New credential</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="relative">
-                  <select value={form.provider} onChange={e => setForm(f => ({ ...f, provider: e.target.value }))}
-                    className="w-full bg-[#141414] border border-border rounded-xl px-3 py-2 text-sm text-[#dce1e7] focus:outline-none focus:border-[#a0e8ef50] appearance-none">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: "hidden" }}
+          >
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid #1B1C1E",
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                background: "#0a0a0b",
+              }}
+            >
+              <p style={{ fontSize: 11, color: "#9A9DA3", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
+                New credential
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ position: "relative" }}>
+                  <select
+                    value={form.provider}
+                    onChange={e => setForm(f => ({ ...f, provider: e.target.value }))}
+                    style={{ ...inputStyle, appearance: "none", paddingRight: 32 }}
+                  >
                     {PROVIDERS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                   </select>
-                  <ChevronDown className="absolute right-3 top-2.5 w-3.5 h-3.5 text-[#5c6672] pointer-events-none" />
+                  <ChevronDown style={{ position: "absolute", right: 10, top: 10, width: 14, height: 14, color: "#9A9DA3", pointerEvents: "none" }} />
                 </div>
-                <input value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
+                <input
+                  value={form.label}
+                  onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
                   placeholder="Name (e.g. My Groq Key)"
-                  className="bg-[#141414] border border-border rounded-xl px-3 py-2 text-sm text-[#dce1e7] placeholder:text-[#3d444c] focus:outline-none focus:border-[#a0e8ef50]" />
+                  style={{ ...inputStyle }}
+                />
               </div>
-              <input type="password" value={form.apiKey} onChange={e => setForm(f => ({ ...f, apiKey: e.target.value }))}
+              <input
+                type="password"
+                value={form.apiKey}
+                onChange={e => setForm(f => ({ ...f, apiKey: e.target.value }))}
                 placeholder={selectedProvider?.placeholder ?? "API key"}
-                className="w-full bg-[#141414] border border-border rounded-xl px-3 py-2 text-sm text-[#dce1e7] placeholder:text-[#3d444c] focus:outline-none focus:border-[#a0e8ef50] font-mono" />
+                style={{ ...inputStyle, fontFamily: "'Inter', monospace" }}
+              />
               {form.provider === "custom" && (
-                <input value={form.baseUrl} onChange={e => setForm(f => ({ ...f, baseUrl: e.target.value }))}
+                <input
+                  value={form.baseUrl}
+                  onChange={e => setForm(f => ({ ...f, baseUrl: e.target.value }))}
                   placeholder="Base URL (https://...)"
-                  className="w-full bg-[#141414] border border-border rounded-xl px-3 py-2 text-sm text-[#dce1e7] placeholder:text-[#3d444c] focus:outline-none focus:border-[#a0e8ef50]" />
+                  style={inputStyle}
+                />
               )}
-              <input value={form.model} onChange={e => setForm(f => ({ ...f, model: e.target.value }))}
+              <input
+                value={form.model}
+                onChange={e => setForm(f => ({ ...f, model: e.target.value }))}
                 placeholder="Model override (optional)"
-                className="w-full bg-[#141414] border border-border rounded-xl px-3 py-2 text-sm text-[#dce1e7] placeholder:text-[#3d444c] focus:outline-none focus:border-[#a0e8ef50]" />
-              <div className="flex gap-2 pt-1">
-                <button onClick={addKey} disabled={adding || !form.label || !form.apiKey}
-                  className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-40"
-                  style={{ backgroundColor: "#a0e8ef", color: "#0a0a0a" }}>
-                  {adding && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save
+                style={inputStyle}
+              />
+              <div style={{ display: "flex", gap: 8, paddingTop: 4 }}>
+                <button
+                  onClick={addKey}
+                  disabled={adding || !form.label || !form.apiKey}
+                  style={{
+                    flex: 1,
+                    padding: "8px 0",
+                    borderRadius: 2,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: "#5E6BFF",
+                    color: "#F0F1F2",
+                    border: "none",
+                    cursor: adding || !form.label || !form.apiKey ? "not-allowed" : "pointer",
+                    opacity: adding || !form.label || !form.apiKey ? 0.4 : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  {adding && <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" />}
+                  Save
                 </button>
-                <button onClick={() => setShowForm(false)}
-                  className="px-4 py-2 border border-border rounded-xl text-sm text-[#5c6672] hover:text-[#b0b8c1] transition-colors">
+                <button
+                  onClick={() => setShowForm(false)}
+                  style={{
+                    padding: "8px 16px",
+                    border: "1px solid #232426",
+                    borderRadius: 2,
+                    fontSize: 12,
+                    color: "#c6c5d8",
+                    background: "transparent",
+                    cursor: "pointer",
+                  }}
+                >
                   Cancel
                 </button>
               </div>
@@ -218,28 +364,44 @@ export default function ByokManager({ clerkId }: { clerkId: string }) {
 
       {/* Table */}
       {loading ? (
-        <div className="p-5 space-y-2">
-          {[...Array(2)].map((_, i) => <div key={i} className="h-10 bg-[#141414] rounded-xl animate-pulse" />)}
+        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="animate-pulse"
+              style={{ height: 40, background: "#1B1C1E", borderRadius: 4 }}
+            />
+          ))}
         </div>
       ) : keys.length === 0 ? (
-        <div className="px-5 py-8 text-center">
-          <p className="text-sm text-[#3d444c]">No credentials yet.</p>
-          <p className="text-[11px] text-[#3d444c] mt-1">Add a key or tell SORK via chat.</p>
+        <div style={{ padding: "32px 20px", textAlign: "center" }}>
+          <p style={{ fontSize: 13, color: "#454655", margin: 0 }}>No credentials yet.</p>
+          <p style={{ fontSize: 11, color: "#454655", marginTop: 4 }}>Add a key or tell SORK via chat.</p>
         </div>
       ) : (
         <>
-          {/* Column headers */}
-          <div className="grid grid-cols-12 px-5 py-2 border-b border-border text-[10px] text-[#3d444c] uppercase tracking-wider">
-            <span className="col-span-4">Name</span>
-            <span className="col-span-3">Provider</span>
-            <span className="col-span-3">Status</span>
-            <span className="col-span-2 text-right">Actions</span>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(12, 1fr)",
+              padding: "8px 20px",
+              borderBottom: "1px solid #1B1C1E",
+              fontSize: 10,
+              color: "#454655",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+            }}
+          >
+            <span style={{ gridColumn: "span 4" }}>Name</span>
+            <span style={{ gridColumn: "span 3" }}>Provider</span>
+            <span style={{ gridColumn: "span 3" }}>Status</span>
+            <span style={{ gridColumn: "span 2", textAlign: "right" }}>Actions</span>
           </div>
 
-          <div className="divide-y divide-border">
+          <div>
             {keys.map((key, i) => {
               const status: KeyStatus = statuses[key.id] ?? (checking ? "checking" : "unknown");
-              const provColor = PROVIDER_COLORS[key.provider] ?? "#b0b8c1";
+              const provColor = PROVIDER_COLORS[key.provider] ?? "#c6c5d8";
 
               return (
                 <motion.div
@@ -247,38 +409,85 @@ export default function ByokManager({ clerkId }: { clerkId: string }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.04 }}
-                  className={`grid grid-cols-12 items-center px-5 py-3 hover:bg-[#111] transition-colors ${!key.active ? "opacity-40" : ""}`}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(12, 1fr)",
+                    alignItems: "center",
+                    padding: "12px 20px",
+                    borderBottom: "1px solid #1B1C1E",
+                    opacity: !key.active ? 0.4 : 1,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#0e0e0f")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
                   {/* Name */}
-                  <div className="col-span-4 min-w-0">
-                    <p className="text-sm text-[#dce1e7] truncate font-medium">{key.label}</p>
-                    {key.model && <p className="text-[10px] text-[#3d444c] font-mono truncate">{key.model}</p>}
+                  <div style={{ gridColumn: "span 4", minWidth: 0 }}>
+                    <p style={{ fontSize: 13, color: "#e5e2e3", fontWeight: 500, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {key.label}
+                    </p>
+                    {key.model && (
+                      <p style={{ fontSize: 10, color: "#454655", fontFamily: "'Inter', monospace", margin: "2px 0 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {key.model}
+                      </p>
+                    )}
                   </div>
 
                   {/* Provider */}
-                  <div className="col-span-3">
-                    <span className="text-[11px] px-2 py-0.5 rounded-full font-medium"
-                      style={{ color: provColor, backgroundColor: provColor + "18", border: `1px solid ${provColor}30` }}>
+                  <div style={{ gridColumn: "span 3" }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        padding: "1px 8px",
+                        borderRadius: 999,
+                        fontWeight: 500,
+                        color: provColor,
+                        backgroundColor: provColor + "18",
+                        border: `1px solid ${provColor}30`,
+                      }}
+                    >
                       {key.provider}
                     </span>
                   </div>
 
                   {/* Status dot */}
-                  <div className="col-span-3">
+                  <div style={{ gridColumn: "span 3" }}>
                     <StatusDot status={status} />
                   </div>
 
                   {/* Actions */}
-                  <div className="col-span-2 flex items-center justify-end gap-1">
-                    <button onClick={() => toggleKey(key.id)}
-                      className="p-1.5 rounded-lg hover:bg-border transition-colors text-[#5c6672] hover:text-[#b0b8c1]">
+                  <div style={{ gridColumn: "span 2", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                    <button
+                      onClick={() => toggleKey(key.id)}
+                      style={{
+                        padding: 6,
+                        borderRadius: 2,
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
                       {key.active
-                        ? <ToggleRight className="w-4 h-4 text-[#aadfb4]" />
-                        : <ToggleLeft className="w-4 h-4" />}
+                        ? <ToggleRight style={{ width: 16, height: 16, color: "#92f1ff" }} />
+                        : <ToggleLeft style={{ width: 16, height: 16, color: "#9A9DA3" }} />}
                     </button>
-                    <button onClick={() => deleteKey(key.id)}
-                      className="p-1.5 rounded-lg hover:bg-[#ffadad15] transition-colors text-[#5c6672] hover:text-[#ffadad]">
-                      <Trash2 className="w-3.5 h-3.5" />
+                    <button
+                      onClick={() => deleteKey(key.id)}
+                      style={{
+                        padding: 6,
+                        borderRadius: 2,
+                        background: "transparent",
+                        border: "1px solid rgba(255,180,171,0.3)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#ffb4ab",
+                      }}
+                    >
+                      <Trash2 style={{ width: 14, height: 14 }} />
                     </button>
                   </div>
                 </motion.div>

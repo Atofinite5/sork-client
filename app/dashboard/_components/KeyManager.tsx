@@ -64,28 +64,78 @@ export default function KeyManager({ clerkId }: { clerkId: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-[#0f0f0f] overflow-hidden">
-      <div className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center">
-            <ShieldCheck className="w-4 h-4 text-accent" />
+    <div
+      style={{
+        background: "#101112",
+        border: "1px solid #1B1C1E",
+        borderRadius: 4,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          borderBottom: "1px solid #1B1C1E",
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 4,
+              backgroundColor: "#5E6BFF18",
+              border: "1px solid #5E6BFF30",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ShieldCheck style={{ width: 16, height: 16, color: "#5E6BFF" }} />
           </div>
           <div>
-            <h2 className="font-semibold text-sm">License Keys</h2>
-            <p className="text-muted text-xs">For SORK CLI authentication</p>
+            <h2
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#e5e2e3",
+                fontFamily: "'Manrope', sans-serif",
+                letterSpacing: "-0.04em",
+                margin: 0,
+              }}
+            >
+              License Keys
+            </h2>
+            <p style={{ fontSize: 11, color: "#9A9DA3", margin: 0, marginTop: 2 }}>For SORK CLI authentication</p>
           </div>
         </div>
         <button
           onClick={issueKey}
           disabled={issuing}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 border border-accent/20 rounded-lg text-accent text-xs hover:bg-accent/20 transition-colors disabled:opacity-40"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 16px",
+            background: "#5E6BFF",
+            border: "none",
+            borderRadius: 2,
+            color: "#F0F1F2",
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: issuing ? "not-allowed" : "pointer",
+            opacity: issuing ? 0.4 : 1,
+          }}
         >
-          {issuing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+          {issuing ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <Plus style={{ width: 14, height: 14 }} />}
           Issue key
         </button>
       </div>
 
-      <div className="px-6 py-4 space-y-3">
+      <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
         {/* New key reveal */}
         <AnimatePresence>
           {newKey && (
@@ -93,60 +143,105 @@ export default function KeyManager({ clerkId }: { clerkId: string }) {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="p-4 rounded-xl border border-success/30 bg-success/5"
+              style={{
+                padding: 16,
+                borderRadius: 4,
+                border: "1px solid #92f1ff30",
+                background: "#92f1ff08",
+              }}
             >
-              <p className="text-xs text-success font-medium mb-2">
-                New key issued — copy now, won't show again
+              <p style={{ fontSize: 12, color: "#92f1ff", fontWeight: 500, marginBottom: 8, margin: "0 0 8px 0" }}>
+                New key issued — copy now, won&apos;t show again
               </p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 text-xs font-mono text-fg bg-[#141414] border border-border rounded-lg px-3 py-2 truncate">
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <code
+                  style={{
+                    flex: 1,
+                    fontSize: 12,
+                    fontFamily: "'Inter', monospace",
+                    color: "#e5e2e3",
+                    background: "#0a0a0b",
+                    border: "1px solid #1B1C1E",
+                    borderRadius: 2,
+                    padding: "8px 12px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    display: "block",
+                  }}
+                >
                   {newKey}
                 </code>
                 <button
                   onClick={copyKey}
-                  className="p-2 rounded-lg border border-border hover:border-accent/40 transition-colors"
+                  style={{
+                    padding: 8,
+                    borderRadius: 2,
+                    border: "1px solid #1B1C1E",
+                    background: "transparent",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
                   {copied ? (
-                    <Check className="w-3.5 h-3.5 text-success" />
+                    <Check style={{ width: 14, height: 14, color: "#92f1ff" }} />
                   ) : (
-                    <Copy className="w-3.5 h-3.5 text-muted" />
+                    <Copy style={{ width: 14, height: 14, color: "#9A9DA3" }} />
                   )}
                 </button>
               </div>
               <button
                 onClick={() => setNewKey(null)}
-                className="text-xs text-muted hover:text-fg mt-2 transition-colors"
+                style={{
+                  fontSize: 12,
+                  color: "#9A9DA3",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  marginTop: 8,
+                  padding: 0,
+                }}
               >
-                I've saved it ✓
+                I&apos;ve saved it ✓
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
         {loading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="w-5 h-5 text-muted animate-spin" />
+          <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
+            <Loader2 style={{ width: 20, height: 20, color: "#9A9DA3" }} className="animate-spin" />
           </div>
         ) : keys.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted text-sm">No active keys.</p>
-            <p className="text-muted text-xs mt-1">Issue one to start using SORK CLI.</p>
+          <div style={{ textAlign: "center", padding: "32px 0" }}>
+            <p style={{ color: "#9A9DA3", fontSize: 13, margin: 0 }}>No active keys.</p>
+            <p style={{ color: "#9A9DA3", fontSize: 12, marginTop: 4 }}>Issue one to start using SORK CLI.</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {keys.map((key) => (
               <motion.div
                 key={key.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex items-center gap-3 p-3 rounded-xl border border-border bg-[#141414]"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: 12,
+                  borderRadius: 4,
+                  border: "1px solid #1B1C1E",
+                  background: "#0e0e0f",
+                }}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <code className="text-xs font-mono text-accent">{key.keyPrefix}…</code>
-                    <span className="text-xs text-muted">{key.name}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <code style={{ fontSize: 12, fontFamily: "'Inter', monospace", color: "#5E6BFF" }}>{key.keyPrefix}…</code>
+                    <span style={{ fontSize: 12, color: "#9A9DA3" }}>{key.name}</span>
                   </div>
-                  <p className="text-xs text-muted mt-0.5">
+                  <p style={{ fontSize: 12, color: "#9A9DA3", marginTop: 2, margin: "2px 0 0 0" }}>
                     {key.lastUsedAt
                       ? `Last used ${new Date(key.lastUsedAt).toLocaleDateString()}`
                       : "Never used"}
@@ -154,9 +249,19 @@ export default function KeyManager({ clerkId }: { clerkId: string }) {
                 </div>
                 <button
                   onClick={() => revokeKey(key.id)}
-                  className="p-1.5 rounded-lg hover:bg-danger/10 transition-colors text-muted hover:text-danger"
+                  style={{
+                    padding: 6,
+                    borderRadius: 2,
+                    background: "transparent",
+                    border: "1px solid rgba(255,180,171,0.3)",
+                    cursor: "pointer",
+                    color: "#ffb4ab",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 style={{ width: 14, height: 14 }} />
                 </button>
               </motion.div>
             ))}

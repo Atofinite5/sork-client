@@ -17,22 +17,16 @@ interface Stats {
   low: number;
 }
 
-function scoreColor(score: number) {
-  if (score >= 80) return "text-[#aadfb4]";
-  if (score >= 55) return "text-[#ffcb8e]";
-  return "text-[#ffadad]";
-}
-
 function scoreBarColor(score: number) {
-  if (score >= 80) return "#aadfb4";
-  if (score >= 55) return "#ffcb8e";
-  return "#ffadad";
+  if (score >= 80) return "#92f1ff";
+  if (score >= 55) return "#ffb689";
+  return "#ffb4ab";
 }
 
 function Trend({ value }: { value: number }) {
-  if (value === 0) return <Minus className="w-3 h-3 text-[#5c6672]" />;
-  if (value > 0) return <TrendingUp className="w-3 h-3 text-[#ffcb8e]" />;
-  return <TrendingDown className="w-3 h-3 text-[#aadfb4]" />;
+  if (value === 0) return <Minus className="w-3 h-3" style={{ color: "#454655" }} />;
+  if (value > 0) return <TrendingUp className="w-3 h-3" style={{ color: "#ffb689" }} />;
+  return <TrendingDown className="w-3 h-3" style={{ color: "#92f1ff" }} />;
 }
 
 export default function StatsCards({ clerkId }: { clerkId: string }) {
@@ -52,21 +46,21 @@ export default function StatsCards({ clerkId }: { clerkId: string }) {
       label: "Total Scans",
       value: stats?.totalScans ?? 0,
       icon: Shield,
-      color: "#a0e8ef",
+      color: "#50d8e9",
       sub: "pipeline runs",
     },
     {
       label: "Issues Found",
       value: stats?.issuesFound ?? 0,
       icon: Bug,
-      color: "#ffadad",
+      color: "#ffb4ab",
       sub: `${stats?.critical ?? 0} critical · ${stats?.high ?? 0} high`,
     },
     {
       label: "Issues Fixed",
       value: stats?.issuesFixed ?? 0,
       icon: Wrench,
-      color: "#aadfb4",
+      color: "#92f1ff",
       sub: `${stats?.fixRate ?? 0}% fix rate`,
     },
     {
@@ -83,7 +77,16 @@ export default function StatsCards({ clerkId }: { clerkId: string }) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-28 rounded-2xl border border-border bg-[#0f0f0f] animate-pulse" />
+          <div
+            key={i}
+            className="animate-pulse"
+            style={{
+              height: 112,
+              background: "#101112",
+              border: "1px solid #1B1C1E",
+              borderRadius: 4,
+            }}
+          />
         ))}
       </div>
     );
@@ -97,48 +100,83 @@ export default function StatsCards({ clerkId }: { clerkId: string }) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.07 }}
-          className="rounded-2xl border border-border bg-[#0f0f0f] p-5 relative overflow-hidden group hover:border-[#262626] transition-colors"
+          style={{
+            background: "#101112",
+            border: "1px solid #1B1C1E",
+            borderRadius: 4,
+            padding: "20px",
+            position: "relative",
+            overflow: "hidden",
+          }}
         >
           {/* Background glow */}
           <div
-            className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-10 group-hover:opacity-15 transition-opacity"
-            style={{ backgroundColor: card.color, filter: "blur(16px)" }}
+            style={{
+              position: "absolute",
+              top: -16,
+              right: -16,
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              backgroundColor: card.color,
+              opacity: 0.08,
+              filter: "blur(16px)",
+            }}
           />
 
-          <div className="flex items-start justify-between mb-3">
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: card.color + "18", border: `1px solid ${card.color}30` }}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 4,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: card.color + "18",
+                border: `1px solid ${card.color}30`,
+              }}
             >
-              <card.icon className="w-4 h-4" style={{ color: card.color }} />
+              <card.icon style={{ width: 16, height: 16, color: card.color }} />
             </div>
             <Trend value={0} />
           </div>
 
-          <div className="flex items-end gap-1 mb-1">
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 4, marginBottom: 4 }}>
             <span
-              className="text-3xl font-bold tabular-nums"
-              style={{ color: card.label === "Code Quality" ? scoreBarColor(stats?.qualityScore ?? 100) : card.color }}
+              style={{
+                fontSize: 30,
+                fontWeight: 700,
+                fontFamily: "'Inter', monospace",
+                color: card.label === "Code Quality" ? scoreBarColor(stats?.qualityScore ?? 100) : card.color,
+                lineHeight: 1,
+              }}
             >
               {card.value}
             </span>
             {card.suffix && (
-              <span className="text-sm text-[#5c6672] mb-1">{card.suffix}</span>
+              <span style={{ fontSize: 13, color: "#9A9DA3", marginBottom: 2 }}>{card.suffix}</span>
             )}
           </div>
 
-          <p className="text-xs text-[#5c6672] leading-tight">{card.label}</p>
-          <p className="text-[11px] text-[#3d444c] mt-0.5">{card.sub}</p>
+          <p style={{ fontSize: 12, color: "#9A9DA3", lineHeight: 1.4 }}>{card.label}</p>
+          <p style={{ fontSize: 11, color: "#454655", marginTop: 2 }}>{card.sub}</p>
 
-          {/* Quality score bar */}
           {card.label === "Code Quality" && (
-            <div className="mt-2 h-1 rounded-full bg-[#1a1a1a] overflow-hidden">
+            <div
+              style={{
+                marginTop: 8,
+                height: 4,
+                borderRadius: 2,
+                background: "#1B1C1E",
+                overflow: "hidden",
+              }}
+            >
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${stats?.qualityScore ?? 100}%` }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className="h-full rounded-full"
-                style={{ backgroundColor: card.color }}
+                style={{ height: "100%", borderRadius: 2, backgroundColor: card.color }}
               />
             </div>
           )}

@@ -16,13 +16,13 @@ interface StatsResponse {
 }
 
 const LANG_COLORS: Record<string, string> = {
-  typescript: "#a0e8ef",
-  javascript: "#fff3a3",
-  python:     "#d4bdff",
-  rust:       "#ffcb8e",
-  go:         "#b5d5ff",
-  java:       "#ffadad",
-  default:    "#b0b8c1",
+  typescript: "#50d8e9",
+  javascript: "#E5FD17",
+  python:     "#bec2ff",
+  rust:       "#ffb689",
+  go:         "#92f1ff",
+  java:       "#ffb4ab",
+  default:    "#c6c5d8",
 };
 
 function langColor(lang: string): string {
@@ -43,23 +43,41 @@ export default function TopFiles({ clerkId }: { clerkId: string }) {
   const maxIssues = Math.max(...files.map(f => f.issuesFound), 1);
 
   return (
-    <div className="rounded-2xl border border-border bg-[#0f0f0f] p-5">
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold text-[#dce1e7]">Files by Issue Count</h3>
-        <p className="text-[11px] text-[#5c6672] mt-0.5">all-time · click to drill down</p>
+    <div
+      style={{
+        background: "#101112",
+        border: "1px solid #1B1C1E",
+        borderRadius: 4,
+        padding: "20px",
+      }}
+    >
+      <div style={{ marginBottom: 16 }}>
+        <h3
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: "#e5e2e3",
+            fontFamily: "'Manrope', sans-serif",
+            letterSpacing: "-0.04em",
+            margin: 0,
+          }}
+        >
+          Files by Issue Count
+        </h3>
+        <p style={{ fontSize: 11, color: "#9A9DA3", marginTop: 2 }}>all-time · click to drill down</p>
       </div>
 
       {files.length === 0 ? (
-        <div className="h-24 flex items-center justify-center text-[#3d444c] text-sm">
+        <div style={{ height: 96, display: "flex", alignItems: "center", justifyContent: "center", color: "#454655", fontSize: 13 }}>
           No file data yet
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {files.map((file, i) => {
             const pct = (file.issuesFound / maxIssues) * 100;
             const col = file.issuesFound > 0
-              ? file.issuesFound >= 3 ? "#ffadad" : "#ffcb8e"
-              : "#aadfb4";
+              ? file.issuesFound >= 3 ? "#ffb4ab" : "#ffb689"
+              : "#92f1ff";
             const shortName = file.fileName.split("/").pop() ?? file.fileName;
 
             return (
@@ -69,29 +87,62 @@ export default function TopFiles({ clerkId }: { clerkId: string }) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.04 }}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2 min-w-0">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                     <span
-                      className="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0"
-                      style={{ color: langColor(file.language), backgroundColor: langColor(file.language) + "18", border: `1px solid ${langColor(file.language)}30` }}
+                      style={{
+                        fontSize: 10,
+                        padding: "1px 6px",
+                        borderRadius: 2,
+                        fontWeight: 500,
+                        flexShrink: 0,
+                        color: langColor(file.language),
+                        backgroundColor: langColor(file.language) + "18",
+                        border: `1px solid ${langColor(file.language)}30`,
+                        fontFamily: "'Inter', monospace",
+                      }}
                     >
                       {file.language}
                     </span>
-                    <span className="text-xs text-[#b0b8c1] truncate" title={file.fileName}>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: "#c6c5d8",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        fontFamily: "'Inter', monospace",
+                      }}
+                      title={file.fileName}
+                    >
                       {shortName}
                     </span>
                   </div>
-                  <span className="text-xs flex-shrink-0 ml-2" style={{ color: col }}>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      flexShrink: 0,
+                      marginLeft: 8,
+                      color: col,
+                      fontFamily: "'Inter', monospace",
+                    }}
+                  >
                     {file.issuesFound} issue{file.issuesFound !== 1 ? "s" : ""}
                   </span>
                 </div>
-                <div className="h-1.5 rounded-full bg-[#1a1a1a] overflow-hidden">
+                <div
+                  style={{
+                    height: 6,
+                    borderRadius: 2,
+                    background: "#1B1C1E",
+                    overflow: "hidden",
+                  }}
+                >
                   <motion.div
-                    className="h-full rounded-full"
+                    style={{ height: "100%", borderRadius: 2, backgroundColor: col }}
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
                     transition={{ duration: 0.6, delay: i * 0.04 + 0.2 }}
-                    style={{ backgroundColor: col }}
                   />
                 </div>
               </motion.div>

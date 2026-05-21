@@ -23,29 +23,53 @@ export default function UsageBar({ clerkId }: { clerkId: string }) {
 
   if (quota.unlimited) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-accent/20 bg-accent/5">
-        <span className="w-2 h-2 rounded-full bg-accent" />
-        <span className="text-sm text-accent font-medium capitalize">{quota.plan.replace("_", " ")}</span>
-        <span className="text-xs text-muted">· Unlimited requests</span>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "7px 16px",
+          borderRadius: 2,
+          border: "1px solid #5E6BFF30",
+          background: "#5E6BFF10",
+        }}
+      >
+        <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#5E6BFF", display: "inline-block" }} />
+        <span style={{ fontSize: 13, color: "#bec2ff", fontWeight: 600 }}>
+          {quota.plan.replace("_", " ")}
+        </span>
+        <span style={{ fontSize: 12, color: "#9A9DA3" }}>· Unlimited requests</span>
       </div>
     );
   }
 
   const pct = Math.round(((quota.used ?? 0) / (quota.limit ?? 1)) * 100);
-  const color = pct >= 90 ? "#ef4444" : pct >= 70 ? "#f59e0b" : "#22d3ee";
+  const color = pct >= 90 ? "#ffb4ab" : pct >= 70 ? "#ffb689" : "#50d8e9";
 
   return (
-    <div className="flex flex-col gap-1.5 min-w-52">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-muted capitalize">{quota.plan} plan</span>
-        <span style={{ color }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 208 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12 }}>
+        <span style={{ color: "#9A9DA3", textTransform: "capitalize" }}>{quota.plan} plan</span>
+        <span style={{ color, fontFamily: "'Inter', monospace" }}>
           {quota.remaining} / {quota.limit} remaining
         </span>
       </div>
-      <div className="h-1.5 bg-border rounded-full overflow-hidden">
+      <div
+        style={{
+          height: 6,
+          background: "#1B1C1E",
+          borderRadius: 2,
+          overflow: "hidden",
+        }}
+      >
         <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, backgroundColor: color }}
+          style={{
+            width: `${pct}%`,
+            height: "100%",
+            borderRadius: 2,
+            backgroundColor: color,
+            transition: "width 0.7s ease",
+          }}
         />
       </div>
     </div>

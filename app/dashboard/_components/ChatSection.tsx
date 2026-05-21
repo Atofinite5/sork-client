@@ -125,38 +125,94 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
+  void activeModel;
 
   return (
     <div
-      className={`rounded-2xl border overflow-hidden flex flex-col transition-colors ${dragging ? "border-accent" : "border-border"} bg-[#0d0d0d]`}
-      style={{ minHeight: 480 }}
+      style={{
+        background: "#101112",
+        border: `1px solid ${dragging ? "#5E6BFF" : "#1B1C1E"}`,
+        borderRadius: 4,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 480,
+        transition: "border-color 0.15s ease",
+      }}
       onDragOver={e => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onDrop={onDrop}
     >
-      {/* ── Header ── */}
-      <div className="border-b border-border px-5 py-3 flex items-center gap-3 bg-[#0f0f0f]">
-        <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-          <Bot className="w-4.5 h-4.5 text-accent" />
+      {/* Header */}
+      <div
+        style={{
+          borderBottom: "1px solid #1B1C1E",
+          padding: "12px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          background: "#0e0e0f",
+        }}
+      >
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 4,
+            backgroundColor: "#5E6BFF18",
+            border: "1px solid #5E6BFF30",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Bot style={{ width: 18, height: 18, color: "#5E6BFF" }} />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold leading-tight">SORK Cloud</p>
-          <p className="text-[11px] text-muted truncate">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#e5e2e3",
+              fontFamily: "'Manrope', sans-serif",
+              letterSpacing: "-0.04em",
+              margin: 0,
+              lineHeight: 1.3,
+            }}
+          >
+            SORK Cloud
+          </p>
+          <p style={{ fontSize: 11, color: "#9A9DA3", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             Security Pipeline&nbsp;•&nbsp;
-            <span className="text-success">sork.ai handles everything</span>
+            <span style={{ color: "#92f1ff" }}>sork.ai handles everything</span>
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs text-muted hidden sm:block opacity-50">drag files here</span>
-          <div className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-            <span className="text-[11px] text-muted">Live</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, color: "#9A9DA3", opacity: 0.5 }} className="hidden sm:block">drag files here</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span
+              style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#92f1ff", display: "inline-block" }}
+              className="animate-pulse"
+            />
+            <span style={{ fontSize: 11, color: "#9A9DA3" }}>Live</span>
           </div>
         </div>
       </div>
 
-      {/* ── Messages ── */}
-      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5" style={{ minHeight: 300, maxHeight: 400 }}>
+      {/* Messages */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
+          minHeight: 300,
+          maxHeight: 400,
+        }}
+      >
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => (
             <motion.div
@@ -164,73 +220,170 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+              style={{
+                display: "flex",
+                gap: 12,
+                flexDirection: msg.role === "user" ? "row-reverse" : "row",
+              }}
             >
               {/* Avatar */}
-              <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border mt-0.5 ${
-                msg.role === "assistant" ? "border-accent/30 bg-accent/10" : "border-border bg-[#1e1e1e]"
-              }`}>
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 2,
+                  border: msg.role === "assistant" ? "1px solid #5E6BFF30" : "1px solid #1B1C1E",
+                  background: msg.role === "assistant" ? "#5E6BFF18" : "#1B1C1E",
+                }}
+              >
                 {msg.role === "assistant"
-                  ? <Bot className="w-3.5 h-3.5 text-accent" />
-                  : <User className="w-3.5 h-3.5 text-muted" />}
+                  ? <Bot style={{ width: 14, height: 14, color: "#5E6BFF" }} />
+                  : <User style={{ width: 14, height: 14, color: "#9A9DA3" }} />}
               </div>
 
-              <div className={`flex flex-col gap-1 max-w-[82%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  maxWidth: "82%",
+                  alignItems: msg.role === "user" ? "flex-end" : "flex-start",
+                }}
+              >
                 {/* File chips */}
                 {msg.attachments && msg.attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                     {msg.attachments.map(a => (
-                      <span key={a.name} className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent/10 border border-accent/20 rounded-full text-[11px] text-accent">
-                        <FileCode className="w-3 h-3" />@{a.name}
+                      <span
+                        key={a.name}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          padding: "2px 8px",
+                          backgroundColor: "#5E6BFF18",
+                          border: "1px solid #5E6BFF30",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          color: "#bec2ff",
+                        }}
+                      >
+                        <FileCode style={{ width: 12, height: 12 }} />@{a.name}
                       </span>
                     ))}
                   </div>
                 )}
 
                 {/* Bubble */}
-                <div className={`rounded-2xl px-4 py-3 text-sm ${
-                  msg.role === "assistant"
-                    ? "bg-[#161616] border border-[#222] text-[#e8e8e8]"
-                    : "bg-[#1e2a2e] border border-accent/15 text-fg"
-                }`}>
+                <div
+                  style={{
+                    borderRadius: 4,
+                    padding: "12px 16px",
+                    fontSize: 13,
+                    background: msg.role === "assistant" ? "#0e0e0f" : "#1B1C1E",
+                    border: msg.role === "assistant" ? "1px solid #232426" : "1px solid #5E6BFF20",
+                    color: "#e5e2e3",
+                  }}
+                >
                   {msg.role === "assistant" ? (
                     <div className="sork-chat-prose">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          p: ({ children }) => <p className="mb-2.5 last:mb-0 leading-[1.7]">{children}</p>,
-                          ul: ({ children }) => <ul className="my-2 space-y-1.5">{children}</ul>,
-                          ol: ({ children }) => <ol className="my-2 space-y-1.5 list-decimal pl-5">{children}</ol>,
+                          p: ({ children }) => <p style={{ marginBottom: 10, lineHeight: 1.7, margin: "0 0 10px 0" }}>{children}</p>,
+                          ul: ({ children }) => <ul style={{ margin: "8px 0", display: "flex", flexDirection: "column", gap: 6 }}>{children}</ul>,
+                          ol: ({ children }) => <ol style={{ margin: "8px 0", display: "flex", flexDirection: "column", gap: 6, paddingLeft: 20, listStyleType: "decimal" }}>{children}</ol>,
                           li: ({ children }) => (
-                            <li className="flex gap-2 leading-[1.65]">
-                              <span className="text-accent mt-[3px] flex-shrink-0 text-[10px]">●</span>
-                              <span className="flex-1">{children}</span>
+                            <li style={{ display: "flex", gap: 8, lineHeight: 1.65 }}>
+                              <span style={{ color: "#5E6BFF", marginTop: 3, flexShrink: 0, fontSize: 10 }}>●</span>
+                              <span style={{ flex: 1 }}>{children}</span>
                             </li>
                           ),
-                          strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                          em: ({ children }) => <em className="italic text-[#bbb]">{children}</em>,
+                          strong: ({ children }) => <strong style={{ fontWeight: 600, color: "#ffffff" }}>{children}</strong>,
+                          em: ({ children }) => <em style={{ fontStyle: "italic", color: "#c6c5d8" }}>{children}</em>,
                           code: ({ children, className }) =>
                             className ? (
-                              <pre className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl p-3.5 overflow-x-auto my-2.5 text-[12px]">
-                                <code className="text-[#a8d8a8] font-mono leading-relaxed">{children}</code>
+                              <pre
+                                style={{
+                                  background: "#070708",
+                                  border: "1px solid #232426",
+                                  borderRadius: 4,
+                                  padding: 14,
+                                  overflowX: "auto",
+                                  margin: "10px 0",
+                                  fontSize: 12,
+                                }}
+                              >
+                                <code style={{ color: "#92f1ff", fontFamily: "'Inter', monospace", lineHeight: 1.6 }}>{children}</code>
                               </pre>
                             ) : (
-                              <code className="bg-[#1a1a1a] border border-[#303030] rounded-md px-1.5 py-[2px] text-accent font-mono text-[0.8em]">{children}</code>
+                              <code
+                                style={{
+                                  background: "#1B1C1E",
+                                  border: "1px solid #232426",
+                                  borderRadius: 2,
+                                  padding: "1px 6px",
+                                  color: "#bec2ff",
+                                  fontFamily: "'Inter', monospace",
+                                  fontSize: "0.8em",
+                                }}
+                              >
+                                {children}
+                              </code>
                             ),
                           blockquote: ({ children }) => (
-                            <blockquote className="border-l-2 border-accent/40 pl-3 my-2 text-muted italic">{children}</blockquote>
+                            <blockquote
+                              style={{
+                                borderLeft: "2px solid #5E6BFF40",
+                                paddingLeft: 12,
+                                margin: "8px 0",
+                                color: "#9A9DA3",
+                                fontStyle: "italic",
+                              }}
+                            >
+                              {children}
+                            </blockquote>
                           ),
-                          h3: ({ children }) => <h3 className="font-semibold text-white text-sm mt-3 mb-1">{children}</h3>,
+                          h3: ({ children }) => (
+                            <h3
+                              style={{
+                                fontWeight: 600,
+                                color: "#ffffff",
+                                fontSize: 13,
+                                marginTop: 12,
+                                marginBottom: 4,
+                                fontFamily: "'Manrope', sans-serif",
+                                letterSpacing: "-0.04em",
+                              }}
+                            >
+                              {children}
+                            </h3>
+                          ),
                         }}
                       >
                         {msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <p className="leading-[1.65] text-sm">{msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}</p>
+                    <p style={{ lineHeight: 1.65, fontSize: 13, margin: 0 }}>
+                      {msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}
+                    </p>
                   )}
                   {msg.byokIntent && (
-                    <div className="mt-2.5 pt-2.5 border-t border-[#222] text-[11px] text-accent">
+                    <div
+                      style={{
+                        marginTop: 10,
+                        paddingTop: 10,
+                        borderTop: "1px solid #232426",
+                        fontSize: 11,
+                        color: "#bec2ff",
+                      }}
+                    >
                       → Use the <strong>BYOK Manager</strong> below to add your API key
                     </div>
                   )}
@@ -241,38 +394,93 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
         </AnimatePresence>
 
         {loading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3 items-center">
-            <div className="w-8 h-8 rounded-full border border-accent/30 bg-accent/10 flex items-center justify-center">
-              <Bot className="w-3.5 h-3.5 text-accent" />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ display: "flex", gap: 12, alignItems: "center" }}
+          >
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                border: "1px solid #5E6BFF30",
+                backgroundColor: "#5E6BFF18",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Bot style={{ width: 14, height: 14, color: "#5E6BFF" }} />
             </div>
-            <div className="bg-[#161616] border border-[#222] rounded-2xl px-4 py-2.5 flex items-center gap-2.5">
-              <div className="flex gap-1">
-                {[0,1,2].map(i => (
-                  <motion.div key={i} className="w-1.5 h-1.5 rounded-full bg-accent"
-                    animate={{ opacity: [0.3,1,0.3], y: [0,-3,0] }}
+            <div
+              style={{
+                background: "#0e0e0f",
+                border: "1px solid #232426",
+                borderRadius: 4,
+                padding: "10px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <div style={{ display: "flex", gap: 4 }}>
+                {[0, 1, 2].map(i => (
+                  <motion.div
+                    key={i}
+                    style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#5E6BFF" }}
+                    animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
                     transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
                   />
                 ))}
               </div>
-              <span className="text-xs text-muted">SORK is analyzing...</span>
+              <span style={{ fontSize: 12, color: "#9A9DA3" }}>SORK is analyzing...</span>
             </div>
           </motion.div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Attachment chips ── */}
+      {/* Attachment chips */}
       <AnimatePresence>
         {attachments.length > 0 && (
-          <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }}
-            className="px-5 pb-2 flex flex-wrap gap-1.5 border-t border-border/50 pt-2">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{
+              padding: "8px 20px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 6,
+              borderTop: "1px solid #1B1C1E",
+            }}
+          >
             {attachments.map(a => (
-              <motion.span key={a.name} initial={{ scale:0.9 }} animate={{ scale:1 }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-accent/10 border border-accent/20 rounded-full text-[11px] text-accent">
-                <FileCode className="w-3 h-3" />@{a.name}
-                <span className="text-accent/40">{(a.size/1024).toFixed(1)}KB</span>
-                <button onClick={() => setAttachments(p => p.filter(x => x.name !== a.name))} className="hover:text-danger ml-0.5">
-                  <X className="w-2.5 h-2.5" />
+              <motion.span
+                key={a.name}
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 10px",
+                  backgroundColor: "#5E6BFF18",
+                  border: "1px solid #5E6BFF30",
+                  borderRadius: 999,
+                  fontSize: 11,
+                  color: "#bec2ff",
+                }}
+              >
+                <FileCode style={{ width: 12, height: 12 }} />
+                @{a.name}
+                <span style={{ color: "#5E6BFF60", fontFamily: "'Inter', monospace" }}>{(a.size / 1024).toFixed(1)}KB</span>
+                <button
+                  onClick={() => setAttachments(p => p.filter(x => x.name !== a.name))}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ffb4ab", display: "flex", alignItems: "center", marginLeft: 2 }}
+                >
+                  <X style={{ width: 10, height: 10 }} />
                 </button>
               </motion.span>
             ))}
@@ -280,28 +488,79 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
         )}
       </AnimatePresence>
 
-      {/* ── Input bar ── */}
-      <div className="border-t border-border bg-[#0f0f0f] px-4 py-3">
-        <div className="flex items-end gap-2">
+      {/* Input bar */}
+      <div
+        style={{
+          borderTop: "1px solid #1B1C1E",
+          background: "#0e0e0f",
+          padding: "12px 16px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
           {/* Left icon buttons */}
-          <div className="flex gap-1 flex-shrink-0 pb-1">
-            <button onClick={() => fileInputRef.current?.click()}
-              className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-accent/40 hover:text-accent transition-colors text-muted"
-              title="Attach file">
-              <Paperclip className="w-3.5 h-3.5" />
+          <div style={{ display: "flex", gap: 4, flexShrink: 0, paddingBottom: 4 }}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 2,
+                border: "1px solid #1B1C1E",
+                background: "transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#9A9DA3",
+              }}
+              title="Attach file"
+            >
+              <Paperclip style={{ width: 14, height: 14 }} />
             </button>
-            <button className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-accent/40 hover:text-accent transition-colors text-muted"
-              title="Search project files">
-              <Globe className="w-3.5 h-3.5" />
+            <button
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 2,
+                border: "1px solid #1B1C1E",
+                background: "transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#9A9DA3",
+              }}
+              title="Search project files"
+            >
+              <Globe style={{ width: 14, height: 14 }} />
             </button>
-            <button className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-accent/40 hover:text-accent transition-colors text-muted"
-              title="Settings">
-              <Settings2 className="w-3.5 h-3.5" />
+            <button
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 2,
+                border: "1px solid #1B1C1E",
+                background: "transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#9A9DA3",
+              }}
+              title="Settings"
+            >
+              <Settings2 style={{ width: 14, height: 14 }} />
             </button>
           </div>
 
-          <input ref={fileInputRef} type="file" multiple accept={SUPPORTED_EXTS.join(",")} className="hidden"
-            onChange={e => e.target.files && handleFiles(e.target.files)} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={SUPPORTED_EXTS.join(",")}
+            style={{ display: "none" }}
+            onChange={e => e.target.files && handleFiles(e.target.files)}
+          />
 
           <textarea
             ref={textareaRef}
@@ -310,19 +569,67 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
             onKeyDown={handleKey}
             placeholder={attachments.length > 0 ? "Ask SORK to scan the attached files..." : "Ask SORK • search project files..."}
             rows={1}
-            className="flex-1 bg-[#141414] border border-border rounded-xl px-4 py-2.5 text-sm text-fg placeholder:text-muted/50 focus:outline-none focus:border-accent/40 resize-none transition-colors"
+            style={{
+              flex: 1,
+              background: "#0a0a0b",
+              border: "1px solid #1B1C1E",
+              borderRadius: 2,
+              padding: "8px 12px",
+              fontSize: 13,
+              color: "#e5e2e3",
+              outline: "none",
+              resize: "none",
+              fontFamily: "inherit",
+            }}
           />
 
-          <button onClick={sendMessage} disabled={loading || !input.trim()}
-            className="w-9 h-9 rounded-xl bg-accent disabled:opacity-30 flex items-center justify-center hover:bg-accent/90 transition-all flex-shrink-0 self-end glow-cyan">
-            <Send className="w-3.5 h-3.5 text-bg" />
+          <button
+            onClick={sendMessage}
+            disabled={loading || !input.trim()}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 2,
+              background: "#5E6BFF",
+              border: "none",
+              cursor: loading || !input.trim() ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              alignSelf: "flex-end",
+              opacity: loading || !input.trim() ? 0.3 : 1,
+              transition: "opacity 0.15s ease",
+            }}
+          >
+            <Send style={{ width: 14, height: 14, color: "#070708" }} />
           </button>
         </div>
 
         {/* Footer tip */}
-        <p className="text-[11px] text-muted/50 text-center mt-2.5 leading-relaxed">
+        <p
+          style={{
+            fontSize: 11,
+            color: "#9A9DA3",
+            opacity: 0.5,
+            textAlign: "center",
+            marginTop: 10,
+            lineHeight: 1.6,
+          }}
+        >
           Tip: Run{" "}
-          <code className="bg-[#1a1a1a] border border-[#2a2a2a] rounded px-1 text-accent/80 font-mono">sork send ./file.ts</code>
+          <code
+            style={{
+              background: "#1B1C1E",
+              border: "1px solid #232426",
+              borderRadius: 2,
+              padding: "0 4px",
+              color: "#bec2ff",
+              fontFamily: "'Inter', monospace",
+            }}
+          >
+            sork send ./file.ts
+          </code>
           {" "}from your terminal to send any file directly into this chat.
         </p>
       </div>
