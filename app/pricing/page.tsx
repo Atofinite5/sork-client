@@ -23,7 +23,6 @@ export default async function PricingPage() {
           {userId ? (
             <>
               <Link href="/dashboard" style={{ color: "#e5e2e3", fontSize: 14, textDecoration: "none", background: "#5E6BFF", padding: "7px 16px", borderRadius: 4, fontWeight: 600 }}>Dashboard</Link>
-              <UserButton appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
             </>
           ) : (
             <Link href="/sign-in" style={{ color: "#e5e2e3", fontSize: 14, textDecoration: "none" }}>Log in</Link>
