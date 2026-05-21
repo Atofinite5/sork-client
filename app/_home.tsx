@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { useState, useEffect, useRef } from "react";
 import SiteNav from "@/components/SiteNav";
+import { ShimmerIcon } from "@/components/ShimmerIcon";
+import type { IconType } from "@/components/ShimmerIcon";
 
 /* ─── Dot-grid helper ────────────────────────────────── */
 const dotBg = {
@@ -14,13 +16,13 @@ const dotBg = {
 /* ─── Interactive Hero Dashboard ─────────────────────── */
 type HeroView = "command" | "scans" | "fixes" | "verified" | "keys" | "reports";
 
-const SIDEBAR_ITEMS: { icon: string; label: string; view: HeroView }[] = [
-  { icon: "⚡", label: "Command",  view: "command"  },
-  { icon: "🔍", label: "Scans",    view: "scans"    },
-  { icon: "🛠",  label: "Fixes",   view: "fixes"    },
-  { icon: "✓",  label: "Verified", view: "verified" },
-  { icon: "🔑", label: "API Keys", view: "keys"     },
-  { icon: "📄", label: "Reports",  view: "reports"  },
+const SIDEBAR_ITEMS: { icon: IconType; label: string; view: HeroView }[] = [
+  { icon: "command",  label: "Command",  view: "command"  },
+  { icon: "scans",    label: "Scans",    view: "scans"    },
+  { icon: "fixes",    label: "Fixes",    view: "fixes"    },
+  { icon: "verified", label: "Verified", view: "verified" },
+  { icon: "keys",     label: "API Keys", view: "keys"     },
+  { icon: "reports",  label: "Reports",  view: "reports"  },
 ];
 
 /* Center pane content per view */
@@ -599,7 +601,7 @@ function HeroDashboard() {
                   transition: "all 0.2s",
                 }}
               >
-                <span style={{ fontSize: 13 }}>{item.icon}</span>
+                <ShimmerIcon type={item.icon} active={active || isHighlighted} size={15} />
                 {item.label}
               </button>
             );

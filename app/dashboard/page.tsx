@@ -11,6 +11,8 @@ import ScansView   from "./_components/ScansView";
 import KeyManager  from "./_components/KeyManager";
 import ByokManager from "./_components/ByokManager";
 import KeysUsage   from "./_components/KeysUsage";
+import { ShimmerIcon } from "@/components/ShimmerIcon";
+import type { IconType } from "@/components/ShimmerIcon";
 
 type View = "command" | "scans" | "keys";
 
@@ -18,10 +20,10 @@ interface Props {
   searchParams: Promise<{ view?: string; file?: string; code?: string }>;
 }
 
-const NAV: { icon: string; label: string; view: View; desc: string }[] = [
-  { icon: "⚡", label: "Command",  view: "command", desc: "Chat with sork.ai — scan, fix, configure" },
-  { icon: "🔍", label: "Scans",    view: "scans",   desc: "Full vulnerability dashboard & graphs"   },
-  { icon: "🔑", label: "API Keys", view: "keys",    desc: "License keys, BYOK, usage"               },
+const NAV: { icon: IconType; label: string; view: View; desc: string }[] = [
+  { icon: "command", label: "Command",  view: "command", desc: "Chat with sork.ai — scan, fix, configure" },
+  { icon: "scans",   label: "Scans",    view: "scans",   desc: "Full vulnerability dashboard & graphs"   },
+  { icon: "keys",    label: "API Keys", view: "keys",    desc: "License keys, BYOK, usage"               },
 ];
 
 export default async function DashboardPage({ searchParams }: Props) {
@@ -69,30 +71,33 @@ export default async function DashboardPage({ searchParams }: Props) {
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
         {/* Sidebar */}
-        <aside style={{ width: 200, background: "#0e0e0f", borderRight: "1px solid #454655", display: "flex", flexDirection: "column", flexShrink: 0, minHeight: "calc(100vh - 54px)" }}>
+        <aside style={{ width: 210, background: "#0e0e0f", borderRight: "1px solid #454655", display: "flex", flexDirection: "column", flexShrink: 0, minHeight: "calc(100vh - 54px)" }}>
           <div style={{ padding: "14px 16px", borderBottom: "1px solid #232426" }}>
             <div style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 12, letterSpacing: "-0.01em", color: "#e5e2e3" }}>OPERATIONS</div>
             <div style={{ fontSize: 9, color: "#c6c5d8", marginTop: 2, fontFamily: "monospace" }}>v1.3.0-stable</div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", paddingTop: 4 }}>
+
+          <div style={{ display: "flex", flexDirection: "column", paddingTop: 6 }}>
             {NAV.map(item => {
               const active = view === item.view;
               return (
                 <Link key={item.view} href={`/dashboard?view=${item.view}`} title={item.desc}
                   style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
+                    display: "flex", alignItems: "center", gap: 11, padding: "11px 16px",
                     borderRight: active ? "2px solid #50d8e9" : "2px solid transparent",
-                    color: active ? "#50d8e9" : "#c6c5d8",
+                    color: active ? "#50d8e9" : "#8a8fa8",
                     background: active ? "#1c1b1d" : "transparent",
                     fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
-                    fontWeight: 500, textDecoration: "none",
+                    fontWeight: 600, textDecoration: "none",
+                    transition: "background 0.15s, color 0.15s",
                   }}>
-                  <span style={{ fontSize: 14 }}>{item.icon}</span>
+                  <ShimmerIcon type={item.icon} active={active} size={16} />
                   {item.label}
                 </Link>
               );
             })}
           </div>
+
           <div style={{ marginTop: "auto", padding: "10px 8px", borderTop: "1px solid #232426" }}>
             <div style={{ fontSize: 9, color: "#9A9DA3", fontFamily: "monospace", textAlign: "center" }}>sork.ai · always on</div>
           </div>
