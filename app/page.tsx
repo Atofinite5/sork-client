@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import SiteNav from "@/components/SiteNav";
 
 /* ─── Dot-grid helper ────────────────────────────────── */
@@ -104,14 +104,14 @@ function CenterPane({ view }: { view: HeroView }) {
           </thead>
           <tbody>
             {SCAN_ROWS.map((r, i) => (
-              <tr key={i} className="border-b border-custom-divider-light transition-colors hover:bg-white/[0.02]"
+              <tr key={i} data-demo={`scan-row-${i}`} className="border-b border-custom-divider-light transition-colors hover:bg-white/[0.02]"
                 style={{ borderLeft: i === 0 ? "2px solid #5E6BFF" : "2px solid transparent" }}>
                 <td className="px-3 py-2.5"><span className="w-1.5 h-1.5 rounded-full block" style={{ background: r.sevC }} /></td>
                 <td className="px-3 py-2.5 text-on-surface font-medium">{r.file}</td>
                 <td className="px-3 py-2.5"><span className="bg-custom-divider text-custom-text-muted px-1.5 py-0.5 rounded text-[9px] uppercase">{r.lang}</span></td>
                 <td className="px-3 py-2.5 text-[9px] font-bold uppercase" style={{ color: r.sevC }}>{r.sev}</td>
                 <td className="px-3 py-2.5 text-[10px]" style={{ color: r.statusC }}>{r.status}</td>
-                <td className="px-3 py-2.5 text-custom-btn-primary text-[10px] cursor-pointer hover:underline">Review →</td>
+                <td className="px-3 py-2.5 text-custom-btn-primary text-[10px] cursor-pointer hover:underline" data-demo={`scan-review-${i}`}>Review →</td>
               </tr>
             ))}
           </tbody>
@@ -141,7 +141,7 @@ function CenterPane({ view }: { view: HeroView }) {
             ))}
           </pre>
           <div className="flex gap-2 px-4 py-3 border-t border-custom-divider-light">
-            <button className="flex-1 bg-custom-btn-primary text-white py-2 rounded-lg text-label-sm font-bold uppercase tracking-wider hover:brightness-110 transition-all">✓ Apply Fix</button>
+            <button data-demo={`fix-apply-${i}`} className="flex-1 bg-custom-btn-primary text-white py-2 rounded-lg text-label-sm font-bold uppercase tracking-wider hover:brightness-110 transition-all">✓ Apply Fix</button>
             <button className="flex-1 border border-custom-divider text-on-surface-variant py-2 rounded-lg text-label-sm font-bold uppercase tracking-wider hover:bg-white/[0.04] transition-all">✗ Reject</button>
           </div>
         </div>
@@ -158,7 +158,7 @@ function CenterPane({ view }: { view: HeroView }) {
           { file: "internal/main.go",  cwe: "CWE-476", score: 94, label: "Null crash eliminated"   },
           { file: "utils/parser.py",   cwe: "CWE-22",  score: 88, label: "Path traversal resolved" },
         ].map((v, i) => (
-          <div key={i} className="flex items-center gap-4 py-3 border-b border-custom-divider-light last:border-0">
+          <div key={i} data-demo={`verified-item-${i}`} className="flex items-center gap-4 py-3 border-b border-custom-divider-light last:border-0">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[13px] font-bold font-mono-data flex-shrink-0"
               style={{ background: "rgba(146,241,255,0.08)", border: "1px solid rgba(146,241,255,0.15)", color: "#92f1ff" }}>
               {v.score}
@@ -186,7 +186,7 @@ function CenterPane({ view }: { view: HeroView }) {
           { name: "dev-key-02",   key: "SORK-••••••••••••b12c", status: "ok",     usage: "198 scans"   },
           { name: "staging-key",  key: "SORK-••••••••••••44ee", status: "limited", usage: "12 scans"    },
         ].map((k, i) => (
-          <div key={i} className="flex items-center gap-4 py-2.5 border-b border-custom-divider-light last:border-0">
+          <div key={i} data-demo={`key-row-${i}`} className="flex items-center gap-4 py-2.5 border-b border-custom-divider-light last:border-0">
             <div className="flex-1">
               <div className="text-[12px] text-on-surface font-medium">{k.name}</div>
               <div className="text-[10px] text-custom-text-muted font-mono-data mt-0.5">{k.key}</div>
@@ -224,7 +224,7 @@ function CenterPane({ view }: { view: HeroView }) {
             <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-custom-btn-primary" />Fixes</span>
           </div>
         </div>
-        <div className="relative h-[120px]">
+        <div data-demo="reports-chart" className="relative h-[120px]">
           <div className="absolute inset-0 flex flex-col justify-between py-1 opacity-10">
             {[0,1,2,3].map(i => <div key={i} className="border-t border-white w-full" />)}
           </div>
@@ -375,15 +375,134 @@ function SorkPanel({ view }: { view: HeroView }) {
   );
 }
 
+/* ─── Auto-demo cursor sequence ──────────────────────── */
+type DemoStep = { target: string; view?: HeroView; click?: boolean; pause: number };
+
+const DEMO_SEQUENCE: DemoStep[] = [
+  { target: "sidebar-scans",    view: "scans",    click: true,  pause: 1400 },
+  { target: "scan-row-0",                         click: false, pause: 800  },
+  { target: "scan-review-0",                      click: false, pause: 700  },
+  { target: "sidebar-fixes",    view: "fixes",    click: true,  pause: 1400 },
+  { target: "fix-apply-0",                        click: true,  pause: 1000 },
+  { target: "sidebar-verified", view: "verified", click: true,  pause: 1400 },
+  { target: "verified-item-0",                    click: false, pause: 700  },
+  { target: "sidebar-reports",  view: "reports",  click: true,  pause: 1400 },
+  { target: "reports-chart",                      click: false, pause: 800  },
+  { target: "sidebar-keys",     view: "keys",     click: true,  pause: 1400 },
+  { target: "key-row-0",                          click: false, pause: 700  },
+  { target: "sidebar-command",  view: "command",  click: true,  pause: 1400 },
+  { target: "launch-scanner",                     click: true,  pause: 1200 },
+];
+
 /* ─── Full hero dashboard ────────────────────────────── */
 function HeroDashboard() {
-  const [view, setView] = useState<HeroView>("command");
+  const [view, setView]       = useState<HeroView>("command");
+  const [cursor, setCursor]   = useState({ x: 100, y: 83, visible: false });
+  const [clicking, setClicking] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stepRef      = useRef(0);
+  const pauseRef     = useRef(false); // user is interacting
+
+  /* resolve DOM position for a data-demo target */
+  function getPos(target: string): { x: number; y: number } | null {
+    if (!containerRef.current) return null;
+    const el = containerRef.current.querySelector<HTMLElement>(`[data-demo="${target}"]`);
+    if (!el) return null;
+    const cr = containerRef.current.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return {
+      x: er.left - cr.left + er.width  / 2,
+      y: er.top  - cr.top  + er.height / 2,
+    };
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    function delay(ms: number) {
+      return new Promise<void>(res => setTimeout(res, ms));
+    }
+
+    async function runDemo() {
+      await delay(1200); // initial pause
+      if (cancelled) return;
+      setCursor(c => ({ ...c, visible: true }));
+
+      while (!cancelled) {
+        const step = DEMO_SEQUENCE[stepRef.current % DEMO_SEQUENCE.length];
+
+        // move to sidebar first if we're jumping views
+        const pos = getPos(step.target);
+        if (!pos) { stepRef.current++; continue; }
+
+        setCursor({ x: pos.x, y: pos.y, visible: true });
+        await delay(420); // cursor travel time (matches CSS transition)
+
+        if (cancelled) return;
+
+        if (step.click) {
+          setClicking(true);
+          await delay(140);
+          setClicking(false);
+          // trigger view change
+          if (step.view) setView(step.view);
+          await delay(step.pause);
+        } else {
+          await delay(step.pause);
+        }
+
+        stepRef.current++;
+        if (stepRef.current >= DEMO_SEQUENCE.length) {
+          stepRef.current = 0;
+          await delay(600); // loop pause
+        }
+      }
+    }
+
+    runDemo();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
-    <div className="w-full flex h-[580px] bg-custom-card-bg rounded-xl overflow-hidden"
-      style={{ border: "1px solid rgba(255,255,255,0.05)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.7)" }}>
+    <div
+      ref={containerRef}
+      className="w-full flex h-[580px] bg-custom-card-bg rounded-xl overflow-hidden relative"
+      style={{ border: "1px solid rgba(255,255,255,0.05)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.7)" }}
+      onMouseEnter={() => { pauseRef.current = true; }}
+      onMouseLeave={() => { pauseRef.current = false; }}
+    >
 
-      {/* Sidebar */}
+      {/* ── Auto cursor ── */}
+      {cursor.visible && (
+        <div
+          className="pointer-events-none absolute z-50"
+          style={{
+            left: cursor.x,
+            top:  cursor.y,
+            transform: "translate(-4px, -4px)",
+            transition: "left 400ms cubic-bezier(0.25,0.46,0.45,0.94), top 400ms cubic-bezier(0.25,0.46,0.45,0.94)",
+          }}
+        >
+          {/* cursor SVG */}
+          <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
+            <path d="M0 0L0 18L4.5 13.5L8 21L10.5 20L7 12.5L13 12.5Z" fill="white"/>
+            <path d="M0 0L0 18L4.5 13.5L8 21L10.5 20L7 12.5L13 12.5Z" stroke="#333" strokeWidth="0.8"/>
+          </svg>
+          {/* click ripple */}
+          {clicking && (
+            <div
+              className="absolute rounded-full border border-white/60"
+              style={{
+                width: 28, height: 28,
+                top: -10, left: -10,
+                animation: "cursorClick 0.35s ease-out forwards",
+              }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ── Sidebar ── */}
       <div className="w-[200px] bg-custom-sidebar border-r border-outline-variant flex flex-col flex-shrink-0">
         <div className="px-4 py-4 border-b border-custom-divider">
           <div className="font-h3 text-[13px] font-bold tracking-tight text-on-surface">OPERATIONS</div>
@@ -393,14 +512,18 @@ function HeroDashboard() {
           {SIDEBAR_ITEMS.map(item => {
             const active = view === item.view;
             return (
-              <button key={item.view} onClick={() => setView(item.view)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-left transition-all group"
+              <button
+                key={item.view}
+                data-demo={`sidebar-${item.view}`}
+                onClick={() => setView(item.view)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-left transition-all"
                 style={{
                   borderRight: active ? "2px solid #50d8e9" : "2px solid transparent",
-                  color: active ? "#50d8e9" : "#c6c5d8",
+                  color:      active ? "#50d8e9" : "#c6c5d8",
                   background: active ? "#1c1b1d" : "transparent",
                   fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500,
-                }}>
+                }}
+              >
                 <span style={{ fontSize: 13 }}>{item.icon}</span>
                 {item.label}
               </button>
@@ -408,14 +531,17 @@ function HeroDashboard() {
           })}
         </div>
         <div className="mt-auto p-2 border-t border-custom-divider">
-          <button onClick={() => setView("command")}
-            className="w-full bg-custom-btn-primary text-white rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider hover:brightness-110 transition-all">
+          <button
+            data-demo="launch-scanner"
+            onClick={() => setView("command")}
+            className="w-full bg-custom-btn-primary text-white rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider hover:brightness-110 transition-all"
+          >
             ⚡ Launch Scanner
           </button>
         </div>
       </div>
 
-      {/* Main pane */}
+      {/* ── Main pane ── */}
       <div className="flex-1 bg-[#0a0a0b] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b border-custom-divider-light" style={{ background: "#0e0e0f" }}>
           <div className="flex items-center gap-2">
@@ -431,8 +557,16 @@ function HeroDashboard() {
         </div>
       </div>
 
-      {/* Sork.ai panel */}
+      {/* ── Sork.ai panel ── */}
       <SorkPanel view={view} />
+
+      {/* cursor click keyframe */}
+      <style>{`
+        @keyframes cursorClick {
+          0%   { transform: scale(0.3); opacity: 1; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
