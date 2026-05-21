@@ -21,7 +21,7 @@ interface ScanRecord {
 
 /* ─── design tokens ──────────────────────────────────── */
 const T = {
-  bg: "#070708", card: "#101112", b1: "#1B1C1E", b2: "#232426",
+  bg: "#070708", card: "#101112", b1: "#1B1C1E", b2: "#232426", b3: "#454655",
   text: "#e5e2e3", sub: "#c6c5d8", muted: "#9A9DA3",
   brand: "#5E6BFF", cyan: "#50d8e9", violet: "#bec2ff",
   amber: "#ffb689", error: "#ffb4ab", green: "#92f1ff", yellow: "#E5FD17",
