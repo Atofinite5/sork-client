@@ -73,7 +73,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, textDecoration: "none" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/sork-logo.png" alt="SORK" style={{ width: 34, height: 34, objectFit: "contain" }} />
-          <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 800, fontSize: 16, letterSpacing: "0.05em", color: "#e5e2e3" }}>SORK</span>
+          <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.08em", color: "#e5e2e3" }}>SORK</span>
         </Link>
         <div style={{ fontFamily: "'Inter', monospace", fontSize: 10, color: "#454655", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           AI DevSecOps Engineer
