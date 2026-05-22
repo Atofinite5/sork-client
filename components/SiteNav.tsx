@@ -29,11 +29,9 @@ export default function SiteNav() {
       zIndex: 50,
     }}>
       {/* Logo */}
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+      <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sork-logo.png" alt="SORK" style={{ width: 38, height: 38, objectFit: "contain" }} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sork-wordmark.png" alt="SORK" style={{ height: 30, objectFit: "contain", marginTop: 1 }} />
+        <img src="/sork-logo.png" alt="SORK" style={{ width: 42, height: 42, objectFit: "contain" }} />
       </Link>
 
       {/* Nav links */}
