@@ -1081,32 +1081,142 @@ export default function Page() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="bg-custom-sidebar border-t border-outline-variant px-8 pt-16 pb-10">
-        <div className="max-w-[1728px] mx-auto grid grid-cols-6 gap-10 mb-12">
-          <div className="col-span-2">
-            <div className="mb-4">
-              <span className="font-h1 text-on-surface" style={{ fontFamily: "'Manrope', sans-serif", fontSize: "clamp(48px,5vw,72px)", fontWeight: 800, letterSpacing: "-0.06em", lineHeight: 1 }}>SORK</span>
-            </div>
-            <p className="text-[13px] text-custom-text-muted max-w-[220px] leading-relaxed">The AI DevSecOps Engineer for every codebase. Powered by sork.ai.</p>
-          </div>
-          {[
-            { h: "Product",  links: [{ l:"Overview", h:"/#features" }, { l:"CLI", h:"/docs#cli" }, { l:"Pricing", h:"/pricing" }] },
-            { h: "Platform", links: [{ l:"Docs", h:"/docs" }, { l:"API", h:"/docs#architecture" }, { l:"Status", h:"#" }] },
-            { h: "Company",  links: [{ l:"About", h:"#" }, { l:"Blog", h:"#" }, { l:"Careers", h:"#" }] },
-            { h: "Legal",    links: [{ l:"Privacy", h:"#" }, { l:"Terms", h:"#" }] },
-          ].map(col => (
-            <div key={col.h} className="flex flex-col gap-2.5">
-              <div className="font-mono-data text-[10px] text-custom-text-muted uppercase tracking-widest mb-1">{col.h}</div>
-              {col.links.map(l => (
-                <Link key={l.l} href={l.h} className="text-[13px] text-on-surface hover:text-primary transition-colors">{l.l}</Link>
+      <footer style={{ background: "#050709", borderTop: "1px solid rgba(255,255,255,0.04)", position: "relative", overflow: "hidden" }}>
+
+        {/* Ambient cyan glow behind center */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-60%)", width: 600, height: 600, background: "radial-gradient(circle, rgba(0,242,254,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+        {/* 3-column main footer body */}
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "5rem 5rem 3rem", display: "grid", gridTemplateColumns: "1.2fr 1.6fr 1.2fr", gap: "2rem", alignItems: "center", position: "relative", zIndex: 5 }}>
+
+          {/* Left — tagline + links */}
+          <div>
+            <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: "clamp(22px,2.5vw,34px)", fontWeight: 400, lineHeight: 1.3, letterSpacing: "1.5px", textTransform: "uppercase", color: "#e5e2e3", marginBottom: "2rem" }}>
+              Scan. Fix.<br />Verify. Ship.
+            </h2>
+            <a href="mailto:hello@sorkcloud.space" style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, textDecoration: "none", letterSpacing: "0.5px", transition: "color 0.3s" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#00f2fe")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
+              hello@sorkcloud.space
+            </a>
+            {/* Nav link columns */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginTop: "2.5rem" }}>
+              {[
+                { h: "Product",  links: [{ l:"Overview", h:"/#features" }, { l:"CLI", h:"/docs#cli" }, { l:"Pricing", h:"/pricing" }, { l:"Docs", h:"/docs" }] },
+                { h: "Company",  links: [{ l:"About", h:"#" }, { l:"Blog", h:"#" }, { l:"Careers", h:"#" }, { l:"Privacy", h:"#" }] },
+              ].map(col => (
+                <div key={col.h} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ fontFamily: "'Inter', monospace", fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "3px", marginBottom: 4 }}>{col.h}</div>
+                  {col.links.map(l => (
+                    <Link key={l.l} href={l.h} style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", textDecoration: "none", letterSpacing: "0.5px", transition: "color 0.3s" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "#00f2fe")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}>
+                      {l.l}
+                    </Link>
+                  ))}
+                </div>
               ))}
             </div>
-          ))}
+          </div>
+
+          {/* Center — glowing SORK emblem */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative" }}>
+            <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              {/* Main SORK wordmark */}
+              <span style={{
+                fontFamily: "'Manrope', sans-serif",
+                fontSize: "clamp(80px,10vw,140px)",
+                fontWeight: 900,
+                letterSpacing: "-0.06em",
+                lineHeight: 1,
+                color: "#ffffff",
+                filter: "drop-shadow(0 0 40px rgba(0,242,254,0.35)) drop-shadow(0 0 80px rgba(0,242,254,0.15))",
+                animation: "footerFloat 6s ease-in-out infinite",
+                display: "block",
+                userSelect: "none",
+              }}>
+                SORK
+              </span>
+              {/* Floor reflection */}
+              <span style={{
+                fontFamily: "'Manrope', sans-serif",
+                fontSize: "clamp(80px,10vw,140px)",
+                fontWeight: 900,
+                letterSpacing: "-0.06em",
+                lineHeight: 1,
+                color: "#ffffff",
+                filter: "blur(4px) drop-shadow(0 0 20px rgba(0,242,254,0.15))",
+                opacity: 0.1,
+                transform: "scaleY(-0.4) translateY(-8px)",
+                display: "block",
+                userSelect: "none",
+                pointerEvents: "none",
+              }}>
+                SORK
+              </span>
+              <div style={{ fontFamily: "'Inter', monospace", fontSize: 11, color: "rgba(0,242,254,0.5)", letterSpacing: "4px", textTransform: "uppercase", marginTop: 8 }}>
+                AI DevSecOps Engineer
+              </div>
+            </div>
+          </div>
+
+          {/* Right — glassmorphic get started card */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{
+              background: "rgba(12,16,22,0.5)",
+              border: "1px solid rgba(255,255,255,0.05)",
+              borderRadius: 12,
+              padding: "2rem",
+              backdropFilter: "blur(24px)",
+              width: "100%",
+              maxWidth: 320,
+              boxShadow: "0 25px 55px rgba(0,0,0,0.5)",
+            }}>
+              <div style={{ fontFamily: "'Inter', monospace", fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "3px", marginBottom: 6 }}>Get started</div>
+              <h3 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 16, fontWeight: 500, letterSpacing: "1px", color: "#e5e2e3", marginBottom: "1.5rem", textTransform: "uppercase" }}>
+                Start scanning free
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: "1rem" }}>
+                {["Your name", "Work email"].map(p => (
+                  <input key={p} type={p.includes("email") ? "email" : "text"} placeholder={p}
+                    style={{ width: "100%", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, padding: "0.8rem 1rem", color: "#fff", fontSize: 13, outline: "none", fontFamily: "'Inter', sans-serif" }}
+                    onFocus={e => { e.currentTarget.style.borderColor = "rgba(0,242,254,0.45)"; e.currentTarget.style.boxShadow = "0 0 16px rgba(0,242,254,0.1)"; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.boxShadow = "none"; }}
+                  />
+                ))}
+              </div>
+              <p style={{ fontFamily: "'Inter', monospace", fontSize: 10, color: "rgba(255,255,255,0.25)", lineHeight: 1.5, marginBottom: "1.2rem" }}>
+                14 free scans · No credit card required
+              </p>
+              <button
+                style={{ width: "100%", background: "#ffffff", color: "#050709", border: "none", padding: "0.9rem", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", textTransform: "uppercase", letterSpacing: "1.5px", transition: "all 0.3s ease", fontFamily: "'Inter', sans-serif" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#00f2fe"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 25px rgba(0,242,254,0.45)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}
+                onClick={() => window.location.href = "/sign-up"}
+              >
+                Get Started Free
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="border-t border-custom-divider pt-6 flex justify-between items-center text-[12px] text-custom-text-muted font-mono-data">
-          <span>Powered by Groq</span>
-          <span>© {y} Sork Inc. All rights reserved.</span>
+
+        {/* Bottom bar */}
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "1.5rem 5rem", borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "'Inter', monospace", fontSize: 10, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "2.5px", position: "relative", zIndex: 5 }}>
+          <a href="#" style={{ color: "rgba(255,255,255,0.25)", textDecoration: "none", transition: "color 0.3s" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#00f2fe")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}>
+            ↑ Up
+          </a>
+          <span>All Rights Reserved</span>
+          <span>© {y} Sork Inc.</span>
         </div>
+
+        <style>{`
+          @keyframes footerFloat {
+            0%, 100% { transform: translateY(0px); }
+            50%       { transform: translateY(-10px); }
+          }
+        `}</style>
       </footer>
     </div>
   );
