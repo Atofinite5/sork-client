@@ -29,10 +29,10 @@ export default function SiteNav() {
       zIndex: 50,
     }}>
       {/* Logo */}
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, textDecoration: "none" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/sork-logo.png" alt="SORK" style={{ width: 36, height: 36, objectFit: "contain" }} />
-        <span style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 700, fontSize: 18, letterSpacing: "-0.04em", color: "#e5e2e3" }}>SORK</span>
+        <span style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 18, letterSpacing: "-0.04em", color: "#e5e2e3" }}>SORK</span>
       </Link>
 
       {/* Nav links */}
