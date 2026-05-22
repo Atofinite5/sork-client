@@ -1084,13 +1084,10 @@ export default function Page() {
       <footer className="bg-custom-sidebar border-t border-outline-variant px-8 pt-16 pb-10">
         <div className="max-w-[1728px] mx-auto grid grid-cols-6 gap-10 mb-12">
           <div className="col-span-2">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-7 h-7 rounded-xl bg-custom-btn-primary/10 border border-custom-btn-primary/25 flex items-center justify-center">
-                <span className="text-primary font-bold text-[13px]">S</span>
-              </div>
-              <span className="font-h3 text-[18px] font-bold text-on-surface tracking-tight" style={{ letterSpacing: "-0.04em" }}>SORK Cloud</span>
+            <div className="mb-4">
+              <span className="font-h1 text-on-surface" style={{ fontFamily: "'Manrope', sans-serif", fontSize: "clamp(48px,5vw,72px)", fontWeight: 800, letterSpacing: "-0.06em", lineHeight: 1 }}>SORK</span>
             </div>
-            <p className="text-[13px] text-custom-text-muted max-w-[220px] leading-relaxed">The security pipeline for every codebase. Powered by sork.ai.</p>
+            <p className="text-[13px] text-custom-text-muted max-w-[220px] leading-relaxed">The AI DevSecOps Engineer for every codebase. Powered by sork.ai.</p>
           </div>
           {[
             { h: "Product",  links: [{ l:"Overview", h:"/#features" }, { l:"CLI", h:"/docs#cli" }, { l:"Pricing", h:"/pricing" }] },
