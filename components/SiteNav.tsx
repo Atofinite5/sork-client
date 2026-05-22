@@ -30,10 +30,9 @@ export default function SiteNav() {
     }}>
       {/* Logo */}
       <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(94,107,255,0.12)", border: "1px solid rgba(94,107,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ color: "#bec2ff", fontFamily: "'Manrope',sans-serif", fontWeight: 800, fontSize: 15 }}>S</span>
-        </div>
-        <span style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 700, fontSize: 18, letterSpacing: "-0.04em", color: "#e5e2e3" }}>SORK Cloud</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/sork-logo.png" alt="SORK" style={{ width: 36, height: 36, objectFit: "contain" }} />
+        <span style={{ fontFamily: "'Manrope',sans-serif", fontWeight: 700, fontSize: 18, letterSpacing: "-0.04em", color: "#e5e2e3" }}>SORK</span>
       </Link>
 
       {/* Nav links */}
