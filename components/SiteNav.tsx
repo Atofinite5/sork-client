@@ -39,7 +39,7 @@ export default function SiteNav() {
         <span style={{
           fontFamily: "'Manrope', sans-serif",
           fontWeight: 900,
-          fontSize: 17,
+          fontSize: 20,
           letterSpacing: "0.07em",
           color: "#f0f0f2",
           marginLeft: -4,
