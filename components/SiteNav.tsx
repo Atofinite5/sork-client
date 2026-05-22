@@ -28,11 +28,28 @@ export default function SiteNav() {
       top: 0,
       zIndex: 50,
     }}>
-      {/* Logo */}
+      {/* Logo lockup — premium cybersecurity brand */}
       <Link href="/" style={{ display: "flex", alignItems: "center", gap: 0, textDecoration: "none" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sork-logo.png" alt="SORK" style={{ width: 44, height: 44, objectFit: "contain" }} />
-        <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 900, fontSize: 16, letterSpacing: "0.12em", color: "#e5e2e3", marginLeft: -2 }}>SORK</span>
+        <img
+          src="/sork-logo.png"
+          alt="SORK"
+          style={{ width: 47, height: 47, objectFit: "contain", flexShrink: 0 }}
+        />
+        <span style={{
+          fontFamily: "'Manrope', sans-serif",
+          fontWeight: 900,
+          fontSize: 17,
+          letterSpacing: "0.07em",
+          color: "#f0f0f2",
+          marginLeft: -4,
+          marginTop: 1,
+          lineHeight: 1,
+          textRendering: "optimizeLegibility",
+          WebkitFontSmoothing: "antialiased",
+        }}>
+          SORK
+        </span>
       </Link>
 
       {/* Nav links */}
