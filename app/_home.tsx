@@ -1035,14 +1035,24 @@ export default function Page() {
                 {
                   color: "#ffb4ab",
                   title: "Bring Your Own Key",
-                  desc: "Connect your own API credentials from any provider. All keys are encrypted at rest with AES-256-GCM — never exposed.",
+                  desc: "Connect your own AI credentials — any provider, any model. Stored with AES-256-GCM encryption. Your keys are yours, always.",
                   svg: (
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <defs><linearGradient id="cf3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ffb4ab"/><stop offset="100%" stopColor="#ffb689"/></linearGradient></defs>
-                      <circle cx="6.5" cy="9" r="3.5" stroke="url(#cf3)" strokeWidth="1.4"/>
-                      <path d="M9.8 9H16" stroke="url(#cf3)" strokeWidth="1.4" strokeLinecap="round"/>
-                      <path d="M14 9V11.5" stroke="url(#cf3)" strokeWidth="1.4" strokeLinecap="round"/>
-                      <path d="M12 9V10.5" stroke="url(#cf3)" strokeWidth="1.4" strokeLinecap="round"/>
+                      <defs>
+                        <linearGradient id="byok-g" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#ffb4ab"/>
+                          <stop offset="100%" stopColor="#ffb689"/>
+                        </linearGradient>
+                      </defs>
+                      {/* Key head — filled circle */}
+                      <circle cx="6" cy="8" r="3.5" fill="url(#byok-g)" opacity="0.9"/>
+                      {/* Key hole */}
+                      <circle cx="6" cy="8" r="1.4" fill="#101112"/>
+                      {/* Key shank */}
+                      <path d="M9.3 8H16.5" stroke="url(#byok-g)" strokeWidth="2" strokeLinecap="round"/>
+                      {/* Teeth */}
+                      <path d="M15 8V10.5" stroke="url(#byok-g)" strokeWidth="1.8" strokeLinecap="round"/>
+                      <path d="M12.5 8V10" stroke="url(#byok-g)" strokeWidth="1.8" strokeLinecap="round"/>
                     </svg>
                   ),
                 },
