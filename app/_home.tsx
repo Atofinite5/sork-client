@@ -1008,22 +1008,98 @@ export default function Page() {
               Core Features
             </h2>
             <div className="grid grid-cols-3 gap-4">
-              {[
-                { icon: "⚡", title: "Groq Acceleration",    desc: "Sub-second inference for all pipeline stages.",            color: "#ffb689" },
-                { icon: "🛡", title: "Nemotron Guardrails",  desc: "Every request screened by NVIDIA Nemotron-3 safety gate.", color: "#50d8e9" },
-                { icon: "🔑", title: "BYOK Support",          desc: "Add Groq, Claude, NVIDIA, OpenAI — AES-256-GCM encrypted.", color: "#ffb4ab" },
-                { icon: "🧠", title: "Hybrid Memory",         desc: "Cohere embed-english-v3.0 with semantic + recency recall.", color: "#bec2ff" },
-                { icon: "👁", title: "Real-time Guard",       desc: "sork guard watches every file save. 150ms feedback.",     color: "#92f1ff" },
-                { icon: "📊", title: "Health Score",          desc: "sork doctor gives your project a 0–100 quality score.",   color: "#9A9DA3" },
-              ].map(f => (
-                <div key={f.title} className="bg-custom-card-bg border border-custom-divider-light rounded-xl p-5"
-                  style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[16px]"
-                      style={{ background: f.color + "18", border: `1px solid ${f.color}30` }}>{f.icon}</div>
-                    <div className="font-h4 text-on-surface font-bold" style={{ fontSize: 15 }}>{f.title}</div>
+              {([
+                {
+                  color: "#ffb689",
+                  title: "Lightning Inference",
+                  desc: "Sub-second AI responses across the full scan, fix, and verify pipeline. No cold starts, no waiting.",
+                  svg: (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <defs><linearGradient id="cf1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ffb689"/><stop offset="100%" stopColor="#fff3a3"/></linearGradient></defs>
+                      <path d="M10.5 2L4 10H9L7.5 16L15 8H10L10.5 2Z" fill="url(#cf1)" strokeLinejoin="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  color: "#50d8e9",
+                  title: "Nemotron Safety Gate",
+                  desc: "Every request is screened by Nemotron before any pipeline stage runs. Powered by Nemotron for secure AI processing.",
+                  svg: (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <defs><linearGradient id="cf2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#50d8e9"/><stop offset="100%" stopColor="#bec2ff"/></linearGradient></defs>
+                      <path d="M9 1.5L2.5 4.5V9.5C2.5 13 5.5 15.5 9 17C12.5 15.5 15.5 13 15.5 9.5V4.5L9 1.5Z" stroke="url(#cf2)" strokeWidth="1.4" strokeLinejoin="round" fill="rgba(80,216,233,0.08)"/>
+                      <path d="M6 9.5L8 11.5L12 7.5" stroke="url(#cf2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  color: "#ffb4ab",
+                  title: "Bring Your Own Key",
+                  desc: "Connect your own API credentials from any provider. All keys are encrypted at rest with AES-256-GCM — never exposed.",
+                  svg: (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <defs><linearGradient id="cf3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ffb4ab"/><stop offset="100%" stopColor="#ffb689"/></linearGradient></defs>
+                      <circle cx="6.5" cy="9" r="3.5" stroke="url(#cf3)" strokeWidth="1.4"/>
+                      <path d="M9.8 9H16" stroke="url(#cf3)" strokeWidth="1.4" strokeLinecap="round"/>
+                      <path d="M14 9V11.5" stroke="url(#cf3)" strokeWidth="1.4" strokeLinecap="round"/>
+                      <path d="M12 9V10.5" stroke="url(#cf3)" strokeWidth="1.4" strokeLinecap="round"/>
+                    </svg>
+                  ),
+                },
+                {
+                  color: "#bec2ff",
+                  title: "Contextual Memory",
+                  desc: "sork.ai remembers your codebase. Every fix is informed by past patches, keeping changes consistent across your project.",
+                  svg: (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <defs><linearGradient id="cf4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#bec2ff"/><stop offset="100%" stopColor="#50d8e9"/></linearGradient></defs>
+                      <ellipse cx="9" cy="9" rx="7" ry="4.5" stroke="url(#cf4)" strokeWidth="1.3"/>
+                      <ellipse cx="9" cy="9" rx="4" ry="7" stroke="url(#cf4)" strokeWidth="1.3"/>
+                      <circle cx="9" cy="9" r="1.5" fill="url(#cf4)"/>
+                    </svg>
+                  ),
+                },
+                {
+                  color: "#92f1ff",
+                  title: "Real-time Guard",
+                  desc: "sork guard watches every file save and reports findings in under 150ms. Keep it running while you code.",
+                  svg: (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <defs><linearGradient id="cf5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#92f1ff"/><stop offset="100%" stopColor="#50d8e9"/></linearGradient></defs>
+                      <circle cx="9" cy="9" r="2" fill="url(#cf5)"/>
+                      <path d="M9 9 m-5 0 a5 5 0 1 1 10 0" stroke="url(#cf5)" strokeWidth="1.3" strokeLinecap="round"/>
+                      <path d="M9 9 m-7.5 0 a7.5 7.5 0 1 1 15 0" stroke="url(#cf5)" strokeWidth="1" strokeLinecap="round" opacity="0.4"/>
+                      <line x1="9" y1="9" x2="14" y2="4" stroke="url(#cf5)" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+                    </svg>
+                  ),
+                },
+                {
+                  color: "#E5FD17",
+                  title: "Health Score",
+                  desc: "sork doctor scores your project 0–100. Language breakdown, high-risk files, and AI artifact detection in one report.",
+                  svg: (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <defs><linearGradient id="cf6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#E5FD17"/><stop offset="100%" stopColor="#92f1ff"/></linearGradient></defs>
+                      <rect x="2" y="12" width="3" height="4" rx="0.5" fill="url(#cf6)" opacity="0.6"/>
+                      <rect x="7.5" y="8" width="3" height="8" rx="0.5" fill="url(#cf6)" opacity="0.8"/>
+                      <rect x="13" y="4" width="3" height="12" rx="0.5" fill="url(#cf6)"/>
+                      <path d="M3.5 12L9 8L14.5 4" stroke="url(#cf6)" strokeWidth="1" strokeLinecap="round" opacity="0.4"/>
+                    </svg>
+                  ),
+                },
+              ] as { color: string; title: string; desc: string; svg: React.ReactNode }[]).map(f => (
+                <div key={f.title}
+                  style={{ background: "#101112", border: "1px solid #1B1C1E", borderRadius: 4, padding: 20, boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)", transition: "border-color 0.2s" }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = f.color + "40")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "#1B1C1E")}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", background: f.color + "14", border: `1px solid ${f.color}28`, flexShrink: 0 }}>
+                      {f.svg}
+                    </div>
+                    <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 15, color: "#e5e2e3", letterSpacing: "-0.02em" }}>{f.title}</span>
                   </div>
-                  <p className="text-[13px] text-custom-text-muted leading-relaxed">{f.desc}</p>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#9A9DA3", lineHeight: 1.65 }}>{f.desc}</p>
                 </div>
               ))}
             </div>
