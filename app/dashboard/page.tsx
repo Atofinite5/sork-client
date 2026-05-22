@@ -70,7 +70,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       {/* Header */}
       <header style={{ background: "#0e0e0fee", backdropFilter: "blur(12px)", borderBottom: "1px solid #232426", height: 54, display: "flex", alignItems: "center", padding: "0 24px", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, flexShrink: 0 }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 5, textDecoration: "none" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 2, textDecoration: "none" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/sork-logo.png" alt="SORK" style={{ width: 34, height: 34, objectFit: "contain" }} />
           <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.08em", color: "#e5e2e3" }}>SORK</span>
