@@ -1081,159 +1081,32 @@ export default function Page() {
       </main>
 
       {/* ── Footer ── */}
-      <footer style={{ background: "#050709", position: "relative", overflow: "hidden" }}>
-
-        {/* Large ambient radial glow behind shield */}
-        <div style={{ position: "absolute", top: "35%", left: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, background: "radial-gradient(circle, rgba(0,242,254,0.07) 0%, transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
-
-        {/* Capsule mini-nav at top of footer */}
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: "2.5rem", paddingBottom: "1rem", position: "relative", zIndex: 10 }}>
-          <nav style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", padding: "0.6rem 2rem", borderRadius: 30, backdropFilter: "blur(12px)", display: "flex", gap: 0 }}>
-            {["Overview","Docs","Pricing","GitHub","Contact"].map((item, i) => (
-              <a key={item} href={item === "Overview" ? "/#features" : item === "Docs" ? "/docs" : item === "Pricing" ? "/pricing" : "#"}
-                style={{ color: i === 0 ? "#00f2fe" : "rgba(255,255,255,0.4)", textDecoration: "none", fontSize: 10, textTransform: "uppercase", letterSpacing: "2.5px", margin: "0 1.1rem", transition: "all 0.3s" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = "#00f2fe"; (e.currentTarget as HTMLAnchorElement).style.textShadow = "0 0 10px rgba(0,242,254,0.5)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = i === 0 ? "#00f2fe" : "rgba(255,255,255,0.4)"; (e.currentTarget as HTMLAnchorElement).style.textShadow = "none"; }}>
-                {item}
-              </a>
-            ))}
-          </nav>
-        </div>
-
-        {/* 3-column body */}
-        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "2rem 5rem 0", display: "grid", gridTemplateColumns: "1.2fr 1.6fr 1.2fr", gap: "2rem", alignItems: "center", position: "relative", zIndex: 5 }}>
-
-          {/* ── Left: tagline + email + nav ── */}
-          <div style={{ paddingBottom: "4rem" }}>
-            <h2 style={{ fontFamily: "'Manrope', sans-serif", fontSize: "clamp(20px,2.2vw,30px)", fontWeight: 400, lineHeight: 1.35, letterSpacing: "2px", textTransform: "uppercase", color: "#ffffff", marginBottom: "2rem" }}>
-              We answer —<br />no fuss,<br />just focus.
-            </h2>
-            <a href="mailto:hello@sorkcloud.space"
-              style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, textDecoration: "none", letterSpacing: "0.5px", display: "block", marginBottom: "2.5rem", transition: "color 0.3s" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#00f2fe")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
-              hello@sorkcloud.space
-            </a>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-              {[
-                { h: "Product",  links: [{ l:"Overview", h:"/#features" }, { l:"CLI", h:"/docs#cli" }, { l:"Pricing", h:"/pricing" }, { l:"Docs", h:"/docs" }] },
-                { h: "Company",  links: [{ l:"About", h:"#" }, { l:"Blog", h:"#" }, { l:"Careers", h:"#" }, { l:"Privacy", h:"#" }] },
-              ].map(col => (
-                <div key={col.h} style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                  <div style={{ fontFamily: "'Inter', monospace", fontSize: 9, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "3px", marginBottom: 4 }}>{col.h}</div>
-                  {col.links.map(l => (
-                    <Link key={l.l} href={l.h}
-                      style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textDecoration: "none", letterSpacing: "0.5px", transition: "color 0.3s" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "#00f2fe")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}>
-                      {l.l}
-                    </Link>
-                  ))}
-                </div>
+      <footer className="bg-custom-sidebar border-t border-outline-variant px-8 pt-16 pb-10">
+        <div className="max-w-[1728px] mx-auto grid grid-cols-6 gap-10 mb-12">
+          <div className="col-span-2">
+            <div className="mb-4">
+              <span className="font-h1 text-on-surface" style={{ fontFamily: "'Manrope', sans-serif", fontSize: "clamp(48px,5vw,72px)", fontWeight: 800, letterSpacing: "-0.06em", lineHeight: 1 }}>SORK</span>
+            </div>
+            <p className="text-[13px] text-custom-text-muted max-w-[220px] leading-relaxed">The AI DevSecOps Engineer for every codebase. Powered by sork.ai.</p>
+          </div>
+          {[
+            { h: "Product",  links: [{ l:"Overview", h:"/#features" }, { l:"CLI", h:"/docs#cli" }, { l:"Pricing", h:"/pricing" }] },
+            { h: "Platform", links: [{ l:"Docs", h:"/docs" }, { l:"API", h:"/docs#architecture" }, { l:"Status", h:"#" }] },
+            { h: "Company",  links: [{ l:"About", h:"#" }, { l:"Blog", h:"#" }, { l:"Careers", h:"#" }] },
+            { h: "Legal",    links: [{ l:"Privacy", h:"#" }, { l:"Terms", h:"#" }] },
+          ].map(col => (
+            <div key={col.h} className="flex flex-col gap-2.5">
+              <div className="font-mono-data text-[10px] text-custom-text-muted uppercase tracking-widest mb-1">{col.h}</div>
+              {col.links.map(l => (
+                <Link key={l.l} href={l.h} className="text-[13px] text-on-surface hover:text-primary transition-colors">{l.l}</Link>
               ))}
             </div>
-          </div>
-
-          {/* ── Center: glowing 3D shield + SORK + floor ── */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", position: "relative" }}>
-
-            {/* Floating shield + wordmark */}
-            <div style={{ animation: "footerFloat 6s ease-in-out infinite", display: "flex", flexDirection: "column", alignItems: "center" }}>
-
-              {/* SVG Shield — cyan glowing */}
-              <svg width="160" height="190" viewBox="0 0 160 190" fill="none" style={{ filter: "drop-shadow(0 0 30px rgba(0,242,254,0.5)) drop-shadow(0 0 60px rgba(0,242,254,0.25))" }}>
-                {/* Outer shield */}
-                <path d="M80 8L16 36V96C16 132 44 163 80 178C116 163 144 132 144 96V36L80 8Z" fill="rgba(0,242,254,0.06)" stroke="rgba(0,242,254,0.5)" strokeWidth="1.5"/>
-                {/* Inner shield */}
-                <path d="M80 22L30 46V96C30 124 52 149 80 162C108 149 130 124 130 96V46L80 22Z" fill="rgba(0,242,254,0.04)" stroke="rgba(0,242,254,0.3)" strokeWidth="1"/>
-                {/* S letterform */}
-                <path d="M96 68C96 60 89 54 80 54C71 54 64 60 64 68C64 76 71 80 80 83C89 86 96 90 96 99C96 108 89 114 80 114C71 114 64 108 64 100" stroke="#00f2fe" strokeWidth="5" strokeLinecap="round" fill="none"/>
-                {/* Top/bottom S terminals */}
-                <line x1="64" y1="68" x2="74" y2="68" stroke="#00f2fe" strokeWidth="4" strokeLinecap="round"/>
-                <line x1="86" y1="100" x2="96" y2="100" stroke="#00f2fe" strokeWidth="4" strokeLinecap="round"/>
-                {/* Inner glow fill */}
-                <ellipse cx="80" cy="95" rx="35" ry="40" fill="rgba(0,242,254,0.04)"/>
-              </svg>
-
-              {/* SORK wordmark below shield */}
-              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: "clamp(40px,5vw,64px)", fontWeight: 900, letterSpacing: "0.15em", color: "#00f2fe", filter: "drop-shadow(0 0 20px rgba(0,242,254,0.6))", lineHeight: 1, marginTop: 12, display: "block", userSelect: "none" }}>
-                SORK
-              </span>
-            </div>
-
-            {/* Dark polished floor surface */}
-            <div style={{ width: "90%", position: "relative", marginTop: -10 }}>
-              {/* Floor ellipse */}
-              <div style={{ width: "100%", height: 24, background: "radial-gradient(ellipse at center, rgba(0,242,254,0.15) 0%, rgba(0,0,0,0) 70%)", filter: "blur(6px)" }} />
-              {/* Floor reflection — flipped SORK */}
-              <div style={{ display: "flex", justifyContent: "center", overflow: "hidden", height: 40 }}>
-                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: "clamp(40px,5vw,64px)", fontWeight: 900, letterSpacing: "0.15em", color: "#00f2fe", transform: "scaleY(-1)", opacity: 0.12, filter: "blur(3px)", lineHeight: 1, userSelect: "none", display: "block", marginTop: -8 }}>
-                  SORK
-                </span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* ── Right: glassmorphic form ── */}
-          <div style={{ display: "flex", justifyContent: "flex-end", paddingBottom: "2rem" }}>
-            <div style={{ background: "rgba(10,15,22,0.5)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: 12, padding: "2.2rem", backdropFilter: "blur(25px)", WebkitBackdropFilter: "blur(25px)", width: "100%", maxWidth: 320, boxShadow: "0 25px 55px rgba(0,0,0,0.5)" }}>
-              <span style={{ fontFamily: "'Inter', monospace", fontSize: 9, textTransform: "uppercase", letterSpacing: "3px", color: "rgba(255,255,255,0.3)", display: "block", marginBottom: 8 }}>
-                ▶ Form
-              </span>
-              <h3 style={{ fontFamily: "'Manrope', sans-serif", fontSize: 15, fontWeight: 500, letterSpacing: "2px", color: "#e5e2e3", textTransform: "uppercase", marginBottom: "1.6rem" }}>
-                Let's get started
-              </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: "1rem" }}>
-                {[{p:"Name",t:"text"},{p:"E-mail",t:"email"}].map(f => (
-                  <input key={f.p} type={f.t} placeholder={f.p} autoComplete="off"
-                    style={{ width: "100%", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, padding: "0.85rem 1.1rem", color: "#ffffff", fontSize: 13, outline: "none", fontFamily: "'Inter', sans-serif", transition: "all 0.3s" }}
-                    onFocus={e => { e.currentTarget.style.borderColor = "rgba(0,242,254,0.45)"; e.currentTarget.style.boxShadow = "0 0 18px rgba(0,242,254,0.12)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
-                    onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
-                  />
-                ))}
-              </div>
-              <p style={{ fontFamily: "'Inter', monospace", fontSize: 10, color: "rgba(255,255,255,0.25)", lineHeight: 1.6, marginBottom: "1.5rem" }}>
-                By clicking "SEND" you agree to be contacted
-              </p>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  onClick={() => window.location.href = "/sign-up"}
-                  style={{ flex: 1, background: "#ffffff", color: "#050709", border: "none", padding: "0.95rem", borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: "pointer", textTransform: "uppercase", letterSpacing: "2px", transition: "all 0.3s", fontFamily: "'Inter', sans-serif" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#00f2fe"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 25px rgba(0,242,254,0.45)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}>
-                  Send
-                </button>
-                <button
-                  onClick={() => window.location.href = "/sign-up"}
-                  style={{ width: 44, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, cursor: "pointer", color: "#fff", fontSize: 16, transition: "all 0.3s" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#00f2fe"; (e.currentTarget as HTMLButtonElement).style.color = "#000"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}>
-                  →
-                </button>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-
-        {/* ── Bottom bar ── */}
-        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "1.4rem 5rem", borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "'Inter', monospace", fontSize: 9, color: "rgba(255,255,255,0.22)", textTransform: "uppercase", letterSpacing: "2.5px", position: "relative", zIndex: 10 }}>
-          <a href="#" onClick={e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-            style={{ color: "rgba(255,255,255,0.22)", textDecoration: "none", transition: "color 0.3s" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "#00f2fe")}
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.22)")}>
-            Up
-          </a>
-          <span>All Rights Reserved</span>
-          <span>{y}</span>
+        <div className="border-t border-custom-divider pt-6 flex justify-between items-center text-[12px] text-custom-text-muted font-mono-data">
+          <span>Powered by Groq</span>
+          <span>© {y} Sork Inc. All rights reserved.</span>
         </div>
-
-        <style>{`
-          @keyframes footerFloat {
-            0%, 100% { transform: translateY(0px); }
-            50%       { transform: translateY(-12px); }
-          }
-        `}</style>
       </footer>
     </div>
   );
