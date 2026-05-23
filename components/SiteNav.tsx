@@ -55,7 +55,13 @@ export default function SiteNav() {
       {/* Nav links */}
       <nav style={{ display: "flex", gap: 28, alignItems: "center" }}>
         {NAV_LINKS.map(l => {
-          const active = path === l.href || (l.href !== "/" && path.startsWith(l.href.split("#")[0]!));
+          // Hash links (like /#features) → active only on exact home page
+          // Path links (like /docs) → active when current path starts with it
+          const base = l.href.split("#")[0]!;
+          const hasHash = l.href.includes("#");
+          const active = hasHash
+            ? path === (base || "/")
+            : path === l.href || (base !== "/" && path.startsWith(base));
           return (
             <Link key={l.label} href={l.href}
               style={{
