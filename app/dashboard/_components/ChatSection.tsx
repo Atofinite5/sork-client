@@ -4,9 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Bot, User, Loader2, Paperclip, Globe, Settings2,
-  FileCode, X
+  FileCode, X, GitBranch, Github
 } from "lucide-react";
-import { apiPost } from "@/lib/api";
+import { apiPost, apiGet } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -65,9 +65,90 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
     preloadedFile ? [{ name: preloadedFile.name, content: preloadedFile.content, type: "file", size: preloadedFile.content.length }] : []
   );
   const [dragging, setDragging] = useState(false);
+  const [repoPickerOpen, setRepoPickerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [repos, setRepos] = useState<{ fullName: string; language: string | null }[]>([]);
+  const [reposLoading, setReposLoading] = useState(false);
+  const [ghConnected, setGhConnected] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /* Repo scan flow */
+  async function openRepoPicker() {
+    setRepoPickerOpen(true);
+    if (repos.length > 0) return;
+    setReposLoading(true);
+    try {
+      const status = await apiGet<{ connected: boolean }>("/api/github/status", clerkId);
+      setGhConnected(status.connected);
+      if (status.connected) {
+        const data = await apiGet<{ repos: { fullName: string; language: string | null }[] }>("/api/github/repos", clerkId);
+        setRepos(data.repos);
+      }
+    } catch { setGhConnected(false); }
+    setReposLoading(false);
+  }
+
+  async function scanRepo(fullName: string) {
+    setRepoPickerOpen(false);
+    const [owner, repo] = fullName.split("/");
+    setMessages(prev => [...prev, { role: "user", content: `Scan repository **${fullName}**` }]);
+    setLoading(true);
+    try {
+      const res = await apiPost<{
+        ok: boolean; filesScanned: number; totalFiles: number;
+        findings: { filePath: string; language: string; code: string; issues: { severity: string; line: number; cwe: string; title: string; description: string; fix: string }[] }[];
+        stats: { critical: number; high: number; medium: number; low: number; total: number };
+        summary: string;
+      }>(`/api/github/repos/${owner}/${repo}/scan`, clerkId, {});
+
+      const sevDot = (s: string) => s === "critical" ? "🔴" : s === "high" ? "🟠" : s === "medium" ? "🟡" : "🟢";
+
+      let reply = `## 🔍 Scan Report — \`${fullName}\`\n\n`;
+      reply += `**${res.summary}**\n\n`;
+      reply += `Files scanned: **${res.filesScanned}** of ${res.totalFiles}\n\n`;
+      reply += `### Findings\n`;
+      reply += `| Severity | Count |\n|---|---|\n`;
+      reply += `| 🔴 Critical | ${res.stats.critical} |\n`;
+      reply += `| 🟠 High | ${res.stats.high} |\n`;
+      reply += `| 🟡 Medium | ${res.stats.medium} |\n`;
+      reply += `| 🟢 Low | ${res.stats.low} |\n\n`;
+
+      if (res.findings.length > 0) {
+        reply += `### Top issues with code\n\n`;
+        for (const f of res.findings.slice(0, 5)) {
+          for (const issue of f.issues.slice(0, 2)) {
+            reply += `${sevDot(issue.severity)} **${issue.title}** — \`${f.filePath}:${issue.line}\`\n`;
+            reply += `> ${issue.description}\n\n`;
+            // Show offending code with line highlight
+            const lines = f.code.split("\n");
+            const start = Math.max(0, issue.line - 3);
+            const end   = Math.min(lines.length, issue.line + 2);
+            reply += "```" + f.language + "\n";
+            for (let i = start; i < end; i++) {
+              const marker = (i + 1) === issue.line ? ">>> " : "    ";
+              reply += `${marker}${String(i + 1).padStart(3)} | ${lines[i] ?? ""}\n`;
+            }
+            reply += "```\n";
+            reply += `💡 **Fix:** ${issue.fix}\n\n---\n\n`;
+          }
+        }
+      } else {
+        reply += `✓ No issues detected — codebase is clean.\n`;
+      }
+
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setMessages(prev => [...prev, { role: "assistant", content: `❌ Scan failed: ${msg}\n\nMake sure GitHub is connected in the **Repositories** tab.` }]);
+    }
+    setLoading(false);
+  }
+
+  function connectGitHub() {
+    apiGet<{ url: string }>("/api/github/oauth/init", clerkId).then(r => window.location.href = r.url).catch(() => alert("GitHub OAuth not configured"));
+  }
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -519,36 +600,29 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
               <Paperclip style={{ width: 14, height: 14 }} />
             </button>
             <button
+              onClick={openRepoPicker}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
-                border: "1px solid #1B1C1E",
-                background: "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                color: "#9A9DA3",
+                width: 32, height: 32, borderRadius: 2,
+                border: "1px solid #1B1C1E", background: "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: "#9A9DA3", transition: "all 0.15s",
               }}
-              title="Search project files"
+              onMouseEnter={e => { e.currentTarget.style.color = "#bec2ff"; e.currentTarget.style.borderColor = "#454655"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#9A9DA3"; e.currentTarget.style.borderColor = "#1B1C1E"; }}
+              title="Scan a GitHub repository"
             >
-              <Globe style={{ width: 14, height: 14 }} />
+              <Github style={{ width: 14, height: 14 }} />
             </button>
             <button
+              onClick={() => setSettingsOpen(v => !v)}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
-                border: "1px solid #1B1C1E",
-                background: "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                color: "#9A9DA3",
+                width: 32, height: 32, borderRadius: 2,
+                border: `1px solid ${settingsOpen ? "#5E6BFF" : "#1B1C1E"}`,
+                background: settingsOpen ? "rgba(94,107,255,0.08)" : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: settingsOpen ? "#bec2ff" : "#9A9DA3", transition: "all 0.15s",
               }}
-              title="Settings"
+              title="Model & settings"
             >
               <Settings2 style={{ width: 14, height: 14 }} />
             </button>
@@ -634,6 +708,83 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
           {" "}from your terminal to send any file directly into this chat.
         </p>
       </div>
+
+      {/* ── Settings popover ── */}
+      {settingsOpen && (
+        <div style={{
+          position: "absolute", bottom: 60, right: 90, width: 280,
+          background: "#0e0e0f", border: "1px solid #232426", borderRadius: 4,
+          padding: 14, zIndex: 100, boxShadow: "0 12px 32px rgba(0,0,0,0.7)",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 13, color: "#e5e2e3" }}>Settings</span>
+            <button onClick={() => setSettingsOpen(false)} style={{ background: "transparent", border: "none", color: "#9A9DA3", cursor: "pointer", fontSize: 16 }}>×</button>
+          </div>
+          <div style={{ fontFamily: "'Inter', monospace", fontSize: 10, color: "#9A9DA3", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Active model</div>
+          <div style={{ fontFamily: "'Inter', monospace", fontSize: 12, color: "#50d8e9", marginBottom: 14, padding: "6px 10px", background: "rgba(80,216,233,0.06)", border: "1px solid rgba(80,216,233,0.2)", borderRadius: 2 }}>
+            {activeModel}
+          </div>
+          <div style={{ fontFamily: "'Inter', monospace", fontSize: 10, color: "#9A9DA3", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Switch model</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {[
+              { id: "llama-3.3-70b-versatile", label: "llama-3.3-70b (best)" },
+              { id: "llama-3.1-8b-instant",   label: "llama-3.1-8b (fastest)" },
+              { id: "mixtral-8x7b-32768",      label: "mixtral-8x7b" },
+            ].map(m => (
+              <button key={m.id}
+                onClick={() => { setInput(`use ${m.id}`); setSettingsOpen(false); textareaRef.current?.focus(); }}
+                style={{ textAlign: "left", padding: "6px 10px", background: m.id === activeModel ? "#1c1b1d" : "transparent",
+                  border: `1px solid ${m.id === activeModel ? "#454655" : "#1B1C1E"}`, borderRadius: 2,
+                  color: m.id === activeModel ? "#bec2ff" : "#c6c5d8", fontSize: 11,
+                  fontFamily: "'Inter', monospace", cursor: "pointer" }}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Repo picker modal ── */}
+      {repoPickerOpen && (
+        <div onClick={() => setRepoPickerOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, backdropFilter: "blur(4px)" }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ width: 480, maxHeight: "70vh", background: "#0e0e0f", border: "1px solid #232426", borderRadius: 4, display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid #1B1C1E", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Github style={{ width: 16, height: 16, color: "#bec2ff" }} />
+                <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 14, color: "#e5e2e3" }}>Scan a Repository</span>
+              </div>
+              <button onClick={() => setRepoPickerOpen(false)} style={{ background: "transparent", border: "none", color: "#9A9DA3", cursor: "pointer", fontSize: 18 }}>×</button>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
+              {reposLoading && <div style={{ padding: 20, textAlign: "center", fontFamily: "'Inter', monospace", fontSize: 12, color: "#9A9DA3" }}>Loading repositories…</div>}
+              {!reposLoading && !ghConnected && (
+                <div style={{ padding: 28, textAlign: "center" }}>
+                  <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 14, color: "#e5e2e3", marginBottom: 8 }}>GitHub not connected</div>
+                  <div style={{ fontFamily: "'Inter', monospace", fontSize: 11, color: "#9A9DA3", marginBottom: 16 }}>Connect GitHub to scan any of your repositories.</div>
+                  <button onClick={connectGitHub}
+                    style={{ background: "#fff", color: "#000", border: "none", padding: "8px 20px", borderRadius: 2, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Inter', sans-serif" }}>
+                    Connect GitHub
+                  </button>
+                </div>
+              )}
+              {!reposLoading && ghConnected && repos.length === 0 && (
+                <div style={{ padding: 20, textAlign: "center", fontFamily: "'Inter', monospace", fontSize: 12, color: "#9A9DA3" }}>No repositories found</div>
+              )}
+              {!reposLoading && ghConnected && repos.map(r => (
+                <button key={r.fullName} onClick={() => scanRepo(r.fullName)}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "transparent", border: "1px solid #1B1C1E", borderRadius: 2, marginBottom: 4, cursor: "pointer", color: "#e5e2e3", fontFamily: "'Inter', monospace", fontSize: 12, transition: "all 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "#5E6BFF"; e.currentTarget.style.background = "rgba(94,107,255,0.06)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#1B1C1E"; e.currentTarget.style.background = "transparent"; }}>
+                  <span>{r.fullName}</span>
+                  <span style={{ fontSize: 10, color: "#9A9DA3" }}>{r.language ?? ""}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
