@@ -116,8 +116,9 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
       setSessionId(res.sessionId);
       if (res.activeModel) setActiveModel(res.activeModel);
       setMessages(prev => [...prev, { role: "assistant", content: res.reply, byokIntent: res.byokIntent }]);
-    } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Something went wrong. Please try again." }]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setMessages(prev => [...prev, { role: "assistant", content: `Error: ${msg}. Check your connection and try again.` }]);
     } finally { setLoading(false); }
   }
 
