@@ -7,6 +7,7 @@ import { Shield } from "lucide-react";
 import Link from "next/link";
 import UsageBar          from "./_components/UsageBar";
 import ChatSection       from "./_components/ChatSection";
+import ProjectScanner    from "./_components/ProjectScanner";
 import ScansView         from "./_components/ScansView";
 import KeyManager        from "./_components/KeyManager";
 import ByokManager       from "./_components/ByokManager";
@@ -133,7 +134,12 @@ export default async function DashboardPage({ searchParams }: Props) {
             <p style={{ fontSize: 12, color: "#9A9DA3" }}>{descs[view]}</p>
           </div>
 
-          {view === "command" && <ChatSection clerkId={userId} preloadedFile={preloadedFile} />}
+          {view === "command" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <ProjectScanner clerkId={userId} />
+              <ChatSection clerkId={userId} preloadedFile={preloadedFile} />
+            </div>
+          )}
           {view === "scans"   && <ScansView clerkId={userId} />}
           {view === "repos"   && <ReposView clerkId={userId} />}
           {view === "pulls"   && <PullRequestsView clerkId={userId} repoParam={repoParam} />}
