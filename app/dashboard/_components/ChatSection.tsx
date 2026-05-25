@@ -38,6 +38,13 @@ interface AgentStep {
   detail?: string;
 }
 
+interface GeneratedTest {
+  testCode: string;
+  framework: string;
+  description: string;
+  coversIssues?: string[];
+}
+
 interface FixProposal {
   originalCode: string;
   fixedCode: string;
@@ -45,6 +52,9 @@ interface FixProposal {
   explanation: string;
   score: number;
   recommendation: "approve" | "rework" | "escalate";
+  generatedTest?: GeneratedTest;
+  category?: string;
+  severity?: string;
 }
 
 interface ChatResponse {
@@ -498,6 +508,10 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
                       explanation={msg.fixProposal.explanation}
                       score={msg.fixProposal.score}
                       recommendation={msg.fixProposal.recommendation}
+                      generatedTest={msg.fixProposal.generatedTest}
+                      category={msg.fixProposal.category}
+                      severity={msg.fixProposal.severity}
+                      clerkId={clerkId}
                       onApply={(code) => copyFixedCode(code)}
                     />
                   )}

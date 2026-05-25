@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, Pencil, Eye, Download, ChevronDown, ChevronRight } from "lucide-react";
+import { Copy, Check, Pencil, Eye, Download, ChevronDown, ChevronRight, FlaskConical, Loader2 } from "lucide-react";
 
 interface DiffLine {
   type: "add" | "remove" | "context";
@@ -18,6 +18,13 @@ interface Change {
   explanation: string;
 }
 
+interface GeneratedTest {
+  testCode: string;
+  framework: string;
+  description: string;
+  coversIssues?: string[];
+}
+
 interface Props {
   originalCode: string;
   fixedCode: string;
@@ -25,6 +32,10 @@ interface Props {
   explanation: string;
   score: number;
   recommendation: "approve" | "rework" | "escalate";
+  generatedTest?: GeneratedTest;
+  category?: string;
+  severity?: string;
+  clerkId?: string;
   onApply?: (code: string) => void;
 }
 
@@ -74,15 +85,45 @@ function computeDiff(original: string, fixed: string): { lines: DiffLine[]; addi
   return { lines: result, additions, deletions };
 }
 
-export default function CodeDiffEditor({ originalCode, fixedCode, changes, explanation, score, recommendation, onApply }: Props) {
+export default function CodeDiffEditor({ originalCode, fixedCode, changes, explanation, score, recommendation, generatedTest, category, severity, clerkId, onApply }: Props) {
   const [mode, setMode] = useState<"diff" | "edit">("diff");
   const [editableCode, setEditableCode] = useState(fixedCode);
   const [copied, setCopied] = useState(false);
   const [expandedChanges, setExpandedChanges] = useState<Set<string>>(new Set());
   const [flashVisible, setFlashVisible] = useState(false);
+  const [testExpanded, setTestExpanded] = useState(false);
+  const [testCopied, setTestCopied] = useState(false);
+  const [learningSent, setLearningSent] = useState(false);
+  const [learningLoading, setLearningLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { lines, additions, deletions } = computeDiff(originalCode, fixedCode);
+
+  /** Send fix-learning data when user applies an edited fix */
+  async function recordFixEdit(userCode: string) {
+    if (!clerkId || learningSent) return;
+    // Only record if the user actually modified the code
+    if (userCode === fixedCode) return;
+    setLearningLoading(true);
+    try {
+      const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+      await fetch(`${BASE}/api/fixlearn/edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-clerk-user-id": clerkId },
+        body: JSON.stringify({
+          aiCode: fixedCode,
+          userCode,
+          category: category ?? "general",
+          severity: severity ?? "medium",
+        }),
+      });
+      setLearningSent(true);
+    } catch {
+      // Silently fail — learning is non-critical
+    } finally {
+      setLearningLoading(false);
+    }
+  }
 
   useEffect(() => {
     setFlashVisible(true);
@@ -237,16 +278,30 @@ export default function CodeDiffEditor({ originalCode, fixedCode, changes, expla
 
           {onApply && (
             <button
-              onClick={() => onApply(mode === "edit" ? editableCode : fixedCode)}
+              onClick={() => {
+                const codeToApply = mode === "edit" ? editableCode : fixedCode;
+                onApply(codeToApply);
+                // Record fix-learning if user edited the code
+                if (mode === "edit" && editableCode !== fixedCode) {
+                  recordFixEdit(editableCode);
+                }
+              }}
+              disabled={learningLoading}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
                 padding: "4px 12px", borderRadius: 2, fontSize: 10,
                 background: "#5E6BFF", border: "none",
                 color: "#070708", fontWeight: 700,
-                cursor: "pointer", fontFamily: "'Inter', monospace",
+                cursor: learningLoading ? "wait" : "pointer", fontFamily: "'Inter', monospace",
+                opacity: learningLoading ? 0.6 : 1,
               }}
             >
-              <Download style={{ width: 10, height: 10 }} /> Apply
+              {learningLoading
+                ? <><Loader2 style={{ width: 10, height: 10, animation: "spin 1s linear infinite" }} /> Learning...</>
+                : learningSent
+                  ? <><Check style={{ width: 10, height: 10 }} /> Applied &amp; Learned</>
+                  : <><Download style={{ width: 10, height: 10 }} /> Apply</>
+              }
             </button>
           )}
         </div>
@@ -429,6 +484,99 @@ export default function CodeDiffEditor({ originalCode, fixedCode, changes, expla
               overflowX: "auto",
             }}
           />
+        </div>
+      )}
+
+      {/* Generated Security Test */}
+      {generatedTest && (
+        <div style={{ borderTop: "1px solid #1B1C1E" }}>
+          <button
+            onClick={() => setTestExpanded(!testExpanded)}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 8,
+              padding: "8px 14px", background: "rgba(168,230,207,0.04)", border: "none",
+              cursor: "pointer", textAlign: "left",
+            }}
+          >
+            {testExpanded
+              ? <ChevronDown style={{ width: 10, height: 10, color: "#a8e6cf", flexShrink: 0 }} />
+              : <ChevronRight style={{ width: 10, height: 10, color: "#a8e6cf", flexShrink: 0 }} />
+            }
+            <FlaskConical style={{ width: 12, height: 12, color: "#a8e6cf", flexShrink: 0 }} />
+            <span style={{ fontSize: 10, fontFamily: "'Inter', monospace", color: "#a8e6cf", fontWeight: 600 }}>
+              Security Test
+            </span>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 4,
+              padding: "1px 6px", borderRadius: 999,
+              background: "rgba(168,230,207,0.08)", border: "1px solid rgba(168,230,207,0.2)",
+              fontSize: 9, fontFamily: "'Inter', monospace", color: "#a8e6cf",
+            }}>
+              {generatedTest.framework}
+            </span>
+            <span style={{ flex: 1, fontSize: 10, fontFamily: "'Inter', monospace", color: "#9A9DA3" }}>
+              {generatedTest.description}
+            </span>
+          </button>
+
+          <AnimatePresence>
+            {testExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                style={{ overflow: "hidden" }}
+              >
+                {/* Test code header with copy button */}
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "6px 14px", background: "#0e0e0f", borderTop: "1px solid #1B1C1E",
+                  borderBottom: "1px solid #1B1C1E",
+                }}>
+                  <span style={{ fontSize: 10, fontFamily: "'Inter', monospace", color: "#9A9DA3" }}>
+                    {generatedTest.framework} — regression test
+                    {generatedTest.coversIssues && generatedTest.coversIssues.length > 0 && (
+                      <> · covers {generatedTest.coversIssues.join(", ")}</>
+                    )}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedTest.testCode);
+                      setTestCopied(true);
+                      setTimeout(() => setTestCopied(false), 2000);
+                    }}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                      padding: "2px 8px", borderRadius: 2, fontSize: 9,
+                      background: "transparent", border: "1px solid #1B1C1E",
+                      color: testCopied ? "#a8e6cf" : "#9A9DA3",
+                      cursor: "pointer", fontFamily: "'Inter', monospace",
+                    }}
+                  >
+                    {testCopied ? <Check style={{ width: 9, height: 9 }} /> : <Copy style={{ width: 9, height: 9 }} />}
+                    {testCopied ? "Copied" : "Copy Test"}
+                  </button>
+                </div>
+
+                {/* Test code */}
+                <div style={{
+                  maxHeight: 280, overflowY: "auto", overflowX: "auto",
+                  padding: "10px 14px",
+                  background: "#070708",
+                }}>
+                  <pre style={{ margin: 0 }}>
+                    <code style={{
+                      fontFamily: "'Inter', monospace", fontSize: 11, lineHeight: 1.6,
+                      color: "#a8e6cf", whiteSpace: "pre",
+                    }}>
+                      {generatedTest.testCode}
+                    </code>
+                  </pre>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </motion.div>
