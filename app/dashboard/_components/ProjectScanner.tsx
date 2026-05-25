@@ -3,7 +3,7 @@
 /**
  * Multi-agent project scanner — runs the full pipeline on a project from the browser.
  *
- *   Cohere embed → Groq fast triage → NVIDIA heavy review → Groq summary
+ *   Embed context → Fast triage → Deep review → Summary
  *
  * Users drop a folder (webkitdirectory) or files, we serialize them, send to
  * /api/agent/scan, and render the report with per-file code highlights.
@@ -122,9 +122,9 @@ export default function ProjectScanner({ clerkId }: { clerkId: string }) {
         </div>
         <p style={{ ...mono, fontSize: 11, color: T.muted, lineHeight: 1.6, marginBottom: 16 }}>
           Drop your project folder. SORK runs the full pipeline:
-          <span style={{ color: T.violet }}> Cohere embed</span> →
-          <span style={{ color: T.cyan }}> Groq fast triage</span> →
-          <span style={{ color: T.amber }}> NVIDIA deep review</span> →
+          <span style={{ color: T.violet }}> embed context</span> →
+          <span style={{ color: T.cyan }}> fast triage</span> →
+          <span style={{ color: T.amber }}> deep review</span> →
           report with line-level fixes.
         </p>
 
@@ -185,9 +185,9 @@ export default function ProjectScanner({ clerkId }: { clerkId: string }) {
             <span style={{ ...mono, fontSize: 12, color: T.violet }}>Multi-agent pipeline running…</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, ...mono, fontSize: 10, color: T.muted }}>
-            <div>→ Stage 1: <span style={{ color: T.violet }}>Cohere</span> indexing project for memory context</div>
-            <div>→ Stage 2: <span style={{ color: T.cyan }}>Groq</span> fast triage across {files.length} files</div>
-            <div>→ Stage 3: <span style={{ color: T.amber }}>NVIDIA</span> deep review on suspicious code</div>
+            <div>→ Stage 1: <span style={{ color: T.violet }}>Embed tier</span> indexing project for memory context</div>
+            <div>→ Stage 2: <span style={{ color: T.cyan }}>Fast tier</span> triage across {files.length} files</div>
+            <div>→ Stage 3: <span style={{ color: T.amber }}>Deep tier</span> review on suspicious code</div>
             <div>→ Stage 4: aggregating findings with line-level fixes</div>
           </div>
         </div>
@@ -262,7 +262,7 @@ export default function ProjectScanner({ clerkId }: { clerkId: string }) {
                     <FileCode style={{ width: 14, height: 14, color: T.cyan }} />
                     <span style={{ ...mono, fontSize: 12, color: T.text }}>{file.filePath}</span>
                     {file.deepReviewed && (
-                      <span style={{ ...mono, fontSize: 9, color: T.amber, background: T.amber + "15", padding: "2px 6px", borderRadius: 2 }}>NVIDIA DEEP-REVIEWED</span>
+                      <span style={{ ...mono, fontSize: 9, color: T.amber, background: T.amber + "15", padding: "2px 6px", borderRadius: 2 }}>DEEP-REVIEWED</span>
                     )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -305,10 +305,10 @@ export default function ProjectScanner({ clerkId }: { clerkId: string }) {
             )}
           </div>
 
-          {/* NVIDIA recommendations */}
+          {/* Deep tier recommendations */}
           {result.heavyAnalysis.length > 0 && (
             <div style={{ background: T.card, border: `1px solid ${T.amber}30`, borderRadius: 4, padding: 18 }}>
-              <div style={{ ...head, fontSize: 13, color: T.amber, marginBottom: 12 }}>🧠 NVIDIA Deep Analysis</div>
+              <div style={{ ...head, fontSize: 13, color: T.amber, marginBottom: 12 }}>🧠 Deep Analysis</div>
               {result.heavyAnalysis.map(h => h.recommendation && (
                 <div key={h.filePath} style={{ marginBottom: 10, padding: "10px 14px", background: "#0a0a0b", borderRadius: 2 }}>
                   <div style={{ ...mono, fontSize: 11, color: T.violet, fontWeight: 600, marginBottom: 4 }}>{h.filePath}</div>

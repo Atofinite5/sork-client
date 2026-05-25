@@ -293,7 +293,7 @@ export default function ByokManager({ clerkId }: { clerkId: string }) {
                 <input
                   value={form.label}
                   onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
-                  placeholder="Name (e.g. My Groq Key)"
+                  placeholder="Name (e.g. My API Key)"
                   style={{ ...inputStyle }}
                 />
               </div>

@@ -281,7 +281,7 @@ export default function ScanHistory({ clerkId }: { clerkId: string }) {
                       <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 11, fontFamily: "'Inter', monospace" }}>
                         <span>
                           <span style={{ color: "#9A9DA3" }}>model  </span>
-                          <span style={{ color: "#c6c5d8" }}>{scan.model ?? "groq"}</span>
+                          <span style={{ color: "#c6c5d8" }}>{scan.model === "auto" || !scan.model ? "sork-engine" : "sork-engine"}</span>
                         </span>
                         <span>
                           <span style={{ color: "#9A9DA3" }}>key  </span>

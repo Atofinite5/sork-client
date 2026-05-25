@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Send, Bot, User, Loader2, Paperclip, Globe, Settings2,
-  FileCode, X, GitBranch, Github
+  Send, Bot, User, Paperclip, Globe, Settings2,
+  FileCode, X, Github, Shield, Zap, Brain, CheckCircle2,
+  AlertTriangle, Copy, Check,
 } from "lucide-react";
 import { apiPost, apiGet } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
@@ -15,6 +16,10 @@ interface Message {
   content: string;
   byokIntent?: boolean;
   attachments?: AttachedFile[];
+  steps?: AgentStep[];
+  fixProposal?: FixProposal;
+  awaitingFixConfirmation?: boolean;
+  intent?: string;
 }
 
 interface AttachedFile {
@@ -24,12 +29,32 @@ interface AttachedFile {
   size: number;
 }
 
+interface AgentStep {
+  agent: string;
+  tier: "fast" | "deep" | "embed";
+  status: "running" | "done" | "skipped" | "error";
+  durationMs?: number;
+  detail?: string;
+}
+
+interface FixProposal {
+  originalCode: string;
+  fixedCode: string;
+  changes: { issueId: string; title: string; original: string; patched: string; explanation: string }[];
+  explanation: string;
+  score: number;
+  recommendation: "approve" | "rework" | "escalate";
+}
+
 interface ChatResponse {
   reply: string;
   sessionId: string;
-  byokIntent?: boolean;
-  modelSwitched?: boolean;
-  activeModel?: string;
+  intent?: string;
+  steps?: AgentStep[];
+  fixProposal?: FixProposal;
+  awaitingFixConfirmation?: boolean;
+  ragContextUsed?: boolean;
+  durationMs?: number;
 }
 
 interface Props {
@@ -40,41 +65,57 @@ interface Props {
 const MAX_FILE_SIZE = 100_000;
 const SUPPORTED_EXTS = [".ts",".tsx",".js",".jsx",".py",".go",".rs",".java",".cs",".rb",".php",".vue",".svelte",".json",".yaml",".yml",".sh",".md",".env",".toml",".sql"];
 
-const WELCOME = `Hey! I'm **SORK**, your advanced security engineer. Here's what's available:
+const WELCOME = `Hey! I'm **SORK** — your AI security engineer. Here's what I can do:
 
-- **Scan code** — attach a file or paste code to run the full pipeline
-- **Fix & verify** — I generate a minimal patch, then confirm every issue is resolved
-- **BYOK setup** — say *"add my Groq key"* or *"connect Claude"* to wire up your API
-- **Switch model** — say *"use llama-3.1-8b"* or *"switch to mixtral"*
-- **VS Code** — run \`sork hook vscode\` to send files straight from your editor
+– **Scan code** — attach a file or paste code. I'll triage, find vulnerabilities, and show you exactly what's wrong
+– **Fix automatically** — say *"fix it"* after a scan and I'll generate a verified security patch
+– **Deep review** — I use multiple analysis tiers for thorough coverage
+– **RAG memory** — I remember your past scans and conversations for better context
 
-What would you like to do?`;
+Attach a file or ask me anything.`;
+
+const TIER_LABELS: Record<string, { label: string; icon: typeof Zap; color: string }> = {
+  fast: { label: "Fast Analysis", icon: Zap, color: "#92f1ff" },
+  deep: { label: "Deep Analysis", icon: Brain, color: "#bec2ff" },
+  embed: { label: "Memory", icon: Shield, color: "#a8e6cf" },
+};
+
+const AGENT_LABELS: Record<string, string> = {
+  "safety-gate": "Safety Check",
+  "memory-retrieval": "Loading Context",
+  "code-embed": "Storing Context",
+  "triage": "Security Triage",
+  "fix": "Generating Patch",
+  "verify": "Verifying Fix",
+  "chat": "Thinking",
+};
 
 export default function ChatSection({ clerkId, preloadedFile }: Props) {
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
     content: preloadedFile
-      ? `File received: \`@${preloadedFile.name}\` **(${(preloadedFile.content.length / 1024).toFixed(1)} KB)**\n\nReady to scan. Hit **Send** to run Nemotron → Triage → Fix → Verify.`
+      ? `File received: \`@${preloadedFile.name}\` **(${(preloadedFile.content.length / 1024).toFixed(1)} KB)**\n\nReady to scan. Hit **Send** to run the full security pipeline.`
       : WELCOME,
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string>();
-  const [activeModel, setActiveModel] = useState("llama-3.3-70b-versatile");
   const [attachments, setAttachments] = useState<AttachedFile[]>(() =>
     preloadedFile ? [{ name: preloadedFile.name, content: preloadedFile.content, type: "file", size: preloadedFile.content.length }] : []
   );
   const [dragging, setDragging] = useState(false);
   const [repoPickerOpen, setRepoPickerOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [repos, setRepos] = useState<{ fullName: string; language: string | null }[]>([]);
   const [reposLoading, setReposLoading] = useState(false);
   const [ghConnected, setGhConnected] = useState(false);
+  const [activeSteps, setActiveSteps] = useState<AgentStep[]>([]);
+  const [pendingFixCode, setPendingFixCode] = useState<string | undefined>();
+  const [pendingFixTriage, setPendingFixTriage] = useState<unknown | undefined>();
+  const [copiedCode, setCopiedCode] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  /* Repo scan flow */
   async function openRepoPicker() {
     setRepoPickerOpen(true);
     if (repos.length > 0) return;
@@ -104,53 +145,30 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
       }>(`/api/github/repos/${owner}/${repo}/scan`, clerkId, {});
 
       const sevDot = (s: string) => s === "critical" ? "🔴" : s === "high" ? "🟠" : s === "medium" ? "🟡" : "🟢";
-
-      let reply = `## 🔍 Scan Report — \`${fullName}\`\n\n`;
-      reply += `**${res.summary}**\n\n`;
-      reply += `Files scanned: **${res.filesScanned}** of ${res.totalFiles}\n\n`;
-      reply += `### Findings\n`;
-      reply += `| Severity | Count |\n|---|---|\n`;
-      reply += `| 🔴 Critical | ${res.stats.critical} |\n`;
-      reply += `| 🟠 High | ${res.stats.high} |\n`;
-      reply += `| 🟡 Medium | ${res.stats.medium} |\n`;
-      reply += `| 🟢 Low | ${res.stats.low} |\n\n`;
-
+      let reply = `## Scan Report — \`${fullName}\`\n\n**${res.summary}**\n\nFiles scanned: **${res.filesScanned}** of ${res.totalFiles}\n\n`;
       if (res.findings.length > 0) {
-        reply += `### Top issues with code\n\n`;
+        reply += `### Top Issues\n\n`;
         for (const f of res.findings.slice(0, 5)) {
           for (const issue of f.issues.slice(0, 2)) {
-            reply += `${sevDot(issue.severity)} **${issue.title}** — \`${f.filePath}:${issue.line}\`\n`;
-            reply += `> ${issue.description}\n\n`;
-            // Show offending code with line highlight
-            const lines = f.code.split("\n");
-            const start = Math.max(0, issue.line - 3);
-            const end   = Math.min(lines.length, issue.line + 2);
-            reply += "```" + f.language + "\n";
-            for (let i = start; i < end; i++) {
-              const marker = (i + 1) === issue.line ? ">>> " : "    ";
-              reply += `${marker}${String(i + 1).padStart(3)} | ${lines[i] ?? ""}\n`;
-            }
-            reply += "```\n";
-            reply += `💡 **Fix:** ${issue.fix}\n\n---\n\n`;
+            reply += `${sevDot(issue.severity)} **${issue.title}** — \`${f.filePath}:${issue.line}\`\n> ${issue.description}\n\n`;
           }
         }
       } else {
-        reply += `✓ No issues detected — codebase is clean.\n`;
+        reply += `✅ No issues detected — codebase is clean.\n`;
       }
-
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      setMessages(prev => [...prev, { role: "assistant", content: `❌ Scan failed: ${msg}\n\nMake sure GitHub is connected in the **Repositories** tab.` }]);
+      setMessages(prev => [...prev, { role: "assistant", content: `Error: ${msg}` }]);
     }
     setLoading(false);
   }
 
   function connectGitHub() {
-    apiGet<{ url: string }>("/api/github/oauth/init", clerkId).then(r => window.location.href = r.url).catch(() => alert("GitHub OAuth not configured"));
+    apiGet<{ url: string }>("/api/github/oauth/init", clerkId).then(r => window.location.href = r.url).catch(() => {});
   }
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, activeSteps]);
 
   const readFile = (file: File): Promise<AttachedFile> =>
     new Promise((resolve, reject) => {
@@ -166,8 +184,6 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
     const results = await Promise.allSettled(arr.map(readFile));
     const loaded: AttachedFile[] = results.filter(r => r.status === "fulfilled").map(r => (r as PromiseFulfilledResult<AttachedFile>).value);
     setAttachments(prev => [...prev, ...loaded]);
-    const mentions = loaded.map(f => `@${f.name}`).join(" ");
-    setInput(prev => (prev ? `${prev} ${mentions}` : mentions).trim() + " ");
     textareaRef.current?.focus();
   }, []);
 
@@ -180,34 +196,152 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
     const msg = input.trim();
     if (!msg || loading) return;
     setInput("");
-    const cur = [...attachments];
+    const curFiles = [...attachments];
     setAttachments([]);
-    setMessages(prev => [...prev, { role: "user", content: msg, attachments: cur }]);
+    setMessages(prev => [...prev, { role: "user", content: msg, attachments: curFiles }]);
     setLoading(true);
+    setActiveSteps([]);
+
     try {
-      const fileContext = cur.length > 0
-        ? "\n\nAttached files:\n" + cur.map(f => `\`\`\`${f.name}\n${f.content.slice(0, 8000)}\n\`\`\``).join("\n")
-        : "";
-      const res = await apiPost<ChatResponse>("/api/chat", clerkId, {
-        message: msg + fileContext,
+      const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+      const payload = {
+        message: msg + (curFiles.length > 0
+          ? "\n\nAttached files:\n" + curFiles.map(f => `\`\`\`${f.name}\n${f.content.slice(0, 8000)}\n\`\`\``).join("\n")
+          : ""),
         sessionId,
-        hasAttachments: cur.length > 0,
-        attachedFiles: cur.map(f => ({ name: f.name, size: f.size })),
+        hasAttachments: curFiles.length > 0,
+        attachedFiles: curFiles.map(f => ({ name: f.name, content: f.content.slice(0, 8000), size: f.size })),
+        pendingFixCode,
+        pendingFixTriage,
+      };
+
+      // Try streaming first
+      const streamRes = await fetch(`${BASE}/api/chat/stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-clerk-user-id": clerkId },
+        body: JSON.stringify(payload),
       });
-      setSessionId(res.sessionId);
-      if (res.activeModel) setActiveModel(res.activeModel);
-      setMessages(prev => [...prev, { role: "assistant", content: res.reply, byokIntent: res.byokIntent }]);
+
+      if (streamRes.ok && streamRes.headers.get("content-type")?.includes("text/event-stream")) {
+        const reader = streamRes.body?.getReader();
+        if (!reader) throw new Error("No stream reader");
+
+        const decoder = new TextDecoder();
+        let fullContent = "";
+        let steps: AgentStep[] = [];
+        let doneData: { intent?: string; fixProposal?: FixProposal; awaitingFixConfirmation?: boolean } = {};
+
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (line.startsWith("data:")) {
+              const raw = line.slice(5).trim();
+              if (!raw) continue;
+              try {
+                const event = JSON.parse(raw);
+                switch (event.type) {
+                  case "session":
+                    setSessionId(event.sessionId);
+                    break;
+                  case "step":
+                    steps = [...steps, event];
+                    setActiveSteps([...steps]);
+                    break;
+                  case "content":
+                    fullContent += event.text;
+                    setMessages(prev => {
+                      const last = prev[prev.length - 1];
+                      if (last?.role === "assistant" && last.intent === "__streaming__") {
+                        return [...prev.slice(0, -1), { ...last, content: fullContent }];
+                      }
+                      return [...prev, { role: "assistant", content: fullContent, intent: "__streaming__" }];
+                    });
+                    break;
+                  case "done":
+                    doneData = event;
+                    break;
+                  case "error":
+                    fullContent += `\n\nError: ${event.message}`;
+                    break;
+                }
+              } catch { /* skip malformed SSE lines */ }
+            }
+          }
+        }
+
+        // Finalize the streamed message
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant") {
+            return [...prev.slice(0, -1), {
+              ...last,
+              content: fullContent,
+              intent: doneData.intent,
+              steps,
+              fixProposal: doneData.fixProposal,
+              awaitingFixConfirmation: doneData.awaitingFixConfirmation,
+            }];
+          }
+          return prev;
+        });
+
+        if (doneData.awaitingFixConfirmation) {
+          const codeFromFiles = curFiles.length > 0
+            ? curFiles.map(f => f.content).join("\n\n")
+            : (msg.match(/```(?:\w+)?\n?([\s\S]+?)```/)?.[1] ?? "");
+          setPendingFixCode(codeFromFiles);
+        } else {
+          setPendingFixCode(undefined);
+          setPendingFixTriage(undefined);
+        }
+      } else {
+        // Fallback to non-streaming
+        const res = await apiPost<ChatResponse>("/api/chat", clerkId, payload);
+        setSessionId(res.sessionId);
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: res.reply,
+          intent: res.intent,
+          steps: res.steps,
+          fixProposal: res.fixProposal,
+          awaitingFixConfirmation: res.awaitingFixConfirmation,
+        }]);
+
+        if (res.awaitingFixConfirmation) {
+          const codeFromFiles = curFiles.length > 0
+            ? curFiles.map(f => f.content).join("\n\n")
+            : (msg.match(/```(?:\w+)?\n?([\s\S]+?)```/)?.[1] ?? "");
+          setPendingFixCode(codeFromFiles);
+        } else {
+          setPendingFixCode(undefined);
+          setPendingFixTriage(undefined);
+        }
+      }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong";
-      setMessages(prev => [...prev, { role: "assistant", content: `Error: ${msg}. Check your connection and try again.` }]);
-    } finally { setLoading(false); }
+      const errMsg = err instanceof Error ? err.message : "Something went wrong";
+      setMessages(prev => [...prev, { role: "assistant", content: `Error: ${errMsg}. Check your connection and try again.` }]);
+    } finally {
+      setLoading(false);
+      setActiveSteps([]);
+    }
   }
 
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
-  void activeModel;
+  function copyFixedCode(code: string) {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  }
 
   return (
     <div
@@ -226,152 +360,82 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
       onDrop={onDrop}
     >
       {/* Header */}
-      <div
-        style={{
-          borderBottom: "1px solid #1B1C1E",
-          padding: "12px 20px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          background: "#0e0e0f",
-        }}
-      >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 4,
-            backgroundColor: "#5E6BFF18",
-            border: "1px solid #5E6BFF30",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
+      <div style={{ borderBottom: "1px solid #1B1C1E", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, background: "#0e0e0f" }}>
+        <div style={{ width: 36, height: 36, borderRadius: 4, backgroundColor: "#5E6BFF18", border: "1px solid #5E6BFF30", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Bot style={{ width: 18, height: 18, color: "#5E6BFF" }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#e5e2e3",
-              fontFamily: "'Manrope', sans-serif",
-              letterSpacing: "-0.04em",
-              margin: 0,
-              lineHeight: 1.3,
-            }}
-          >
-            SORK Cloud
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#e5e2e3", fontFamily: "'Manrope', sans-serif", letterSpacing: "-0.04em", margin: 0, lineHeight: 1.3 }}>
+            SORK Engine
           </p>
           <p style={{ fontSize: 11, color: "#9A9DA3", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            Security Pipeline&nbsp;•&nbsp;
-            <span style={{ color: "#92f1ff" }}>sork.ai handles everything</span>
+            Multi-Agent Security Pipeline&nbsp;•&nbsp;
+            <span style={{ color: "#92f1ff" }}>RAG-enhanced</span>
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <span style={{ fontSize: 12, color: "#9A9DA3", opacity: 0.5 }} className="hidden sm:block">drag files here</span>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <span
-              style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#92f1ff", display: "inline-block" }}
-              className="animate-pulse"
-            />
+            <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#92f1ff", display: "inline-block" }} className="animate-pulse" />
             <span style={{ fontSize: 11, color: "#9A9DA3" }}>Live</span>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-          minHeight: 300,
-          maxHeight: 400,
-        }}
-      >
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 20, minHeight: 300, maxHeight: 400 }}>
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{
-                display: "flex",
-                gap: 12,
-                flexDirection: msg.role === "user" ? "row-reverse" : "row",
-              }}
-            >
-              {/* Avatar */}
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: 2,
-                  border: msg.role === "assistant" ? "1px solid #5E6BFF30" : "1px solid #1B1C1E",
-                  background: msg.role === "assistant" ? "#5E6BFF18" : "#1B1C1E",
-                }}
-              >
-                {msg.role === "assistant"
-                  ? <Bot style={{ width: 14, height: 14, color: "#5E6BFF" }} />
-                  : <User style={{ width: 14, height: 14, color: "#9A9DA3" }} />}
+            <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
+              style={{ display: "flex", gap: 12, flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2,
+                border: msg.role === "assistant" ? "1px solid #5E6BFF30" : "1px solid #1B1C1E",
+                background: msg.role === "assistant" ? "#5E6BFF18" : "#1B1C1E",
+              }}>
+                {msg.role === "assistant" ? <Bot style={{ width: 14, height: 14, color: "#5E6BFF" }} /> : <User style={{ width: 14, height: 14, color: "#9A9DA3" }} />}
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 4,
-                  maxWidth: "82%",
-                  alignItems: msg.role === "user" ? "flex-end" : "flex-start",
-                }}
-              >
-                {/* File chips */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxWidth: "82%", alignItems: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 {msg.attachments && msg.attachments.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                     {msg.attachments.map(a => (
-                      <span
-                        key={a.name}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                          padding: "2px 8px",
-                          backgroundColor: "#5E6BFF18",
-                          border: "1px solid #5E6BFF30",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          color: "#bec2ff",
-                        }}
-                      >
+                      <span key={a.name} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", backgroundColor: "#5E6BFF18", border: "1px solid #5E6BFF30", borderRadius: 999, fontSize: 11, color: "#bec2ff" }}>
                         <FileCode style={{ width: 12, height: 12 }} />@{a.name}
                       </span>
                     ))}
                   </div>
                 )}
 
-                {/* Bubble */}
-                <div
-                  style={{
-                    borderRadius: 4,
-                    padding: "12px 16px",
-                    fontSize: 13,
-                    background: msg.role === "assistant" ? "#0e0e0f" : "#1B1C1E",
-                    border: msg.role === "assistant" ? "1px solid #232426" : "1px solid #5E6BFF20",
-                    color: "#e5e2e3",
-                  }}
-                >
+                {/* Agent steps */}
+                {msg.steps && msg.steps.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 4 }}>
+                    {msg.steps.map((step, si) => {
+                      const tierInfo = TIER_LABELS[step.tier] ?? TIER_LABELS.fast;
+                      const TierIcon = tierInfo.icon;
+                      return (
+                        <span key={si} style={{
+                          display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px",
+                          backgroundColor: step.status === "done" ? "rgba(168,230,207,0.08)" : step.status === "error" ? "rgba(255,180,171,0.08)" : "rgba(146,241,255,0.08)",
+                          border: `1px solid ${step.status === "done" ? "rgba(168,230,207,0.2)" : step.status === "error" ? "rgba(255,180,171,0.2)" : "rgba(146,241,255,0.2)"}`,
+                          borderRadius: 999, fontSize: 10, color: tierInfo.color,
+                        }}>
+                          <TierIcon style={{ width: 10, height: 10 }} />
+                          {AGENT_LABELS[step.agent] ?? step.agent}
+                          {step.durationMs != null && <span style={{ color: "#9A9DA3", fontSize: 9 }}>{step.durationMs}ms</span>}
+                          {step.status === "done" && <CheckCircle2 style={{ width: 9, height: 9, color: "#a8e6cf" }} />}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div style={{
+                  borderRadius: 4, padding: "12px 16px", fontSize: 13,
+                  background: msg.role === "assistant" ? "#0e0e0f" : "#1B1C1E",
+                  border: msg.role === "assistant" ? "1px solid #232426" : "1px solid #5E6BFF20",
+                  color: "#e5e2e3",
+                }}>
                   {msg.role === "assistant" ? (
                     <div className="sork-chat-prose">
                       <ReactMarkdown
@@ -390,59 +454,26 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
                           em: ({ children }) => <em style={{ fontStyle: "italic", color: "#c6c5d8" }}>{children}</em>,
                           code: ({ children, className }) =>
                             className ? (
-                              <pre
-                                style={{
-                                  background: "#070708",
-                                  border: "1px solid #232426",
-                                  borderRadius: 4,
-                                  padding: 14,
-                                  overflowX: "auto",
-                                  margin: "10px 0",
-                                  fontSize: 12,
-                                }}
-                              >
+                              <pre style={{ background: "#070708", border: "1px solid #232426", borderRadius: 4, padding: 14, overflowX: "auto", margin: "10px 0", fontSize: 12 }}>
                                 <code style={{ color: "#92f1ff", fontFamily: "'Inter', monospace", lineHeight: 1.6 }}>{children}</code>
                               </pre>
                             ) : (
-                              <code
-                                style={{
-                                  background: "#1B1C1E",
-                                  border: "1px solid #232426",
-                                  borderRadius: 2,
-                                  padding: "1px 6px",
-                                  color: "#bec2ff",
-                                  fontFamily: "'Inter', monospace",
-                                  fontSize: "0.8em",
-                                }}
-                              >
+                              <code style={{ background: "#1B1C1E", border: "1px solid #232426", borderRadius: 2, padding: "1px 6px", color: "#bec2ff", fontFamily: "'Inter', monospace", fontSize: "0.8em" }}>
                                 {children}
                               </code>
                             ),
                           blockquote: ({ children }) => (
-                            <blockquote
-                              style={{
-                                borderLeft: "2px solid #5E6BFF40",
-                                paddingLeft: 12,
-                                margin: "8px 0",
-                                color: "#9A9DA3",
-                                fontStyle: "italic",
-                              }}
-                            >
+                            <blockquote style={{ borderLeft: "2px solid #5E6BFF40", paddingLeft: 12, margin: "8px 0", color: "#9A9DA3", fontStyle: "italic" }}>
                               {children}
                             </blockquote>
                           ),
+                          h2: ({ children }) => (
+                            <h2 style={{ fontWeight: 700, color: "#ffffff", fontSize: 15, marginTop: 14, marginBottom: 6, fontFamily: "'Manrope', sans-serif", letterSpacing: "-0.04em" }}>
+                              {children}
+                            </h2>
+                          ),
                           h3: ({ children }) => (
-                            <h3
-                              style={{
-                                fontWeight: 600,
-                                color: "#ffffff",
-                                fontSize: 13,
-                                marginTop: 12,
-                                marginBottom: 4,
-                                fontFamily: "'Manrope', sans-serif",
-                                letterSpacing: "-0.04em",
-                              }}
-                            >
+                            <h3 style={{ fontWeight: 600, color: "#ffffff", fontSize: 13, marginTop: 12, marginBottom: 4, fontFamily: "'Manrope', sans-serif", letterSpacing: "-0.04em" }}>
                               {children}
                             </h3>
                           ),
@@ -456,17 +487,50 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
                       {msg.content.replace(/\n\nAttached files:[\s\S]*/m, "")}
                     </p>
                   )}
-                  {msg.byokIntent && (
-                    <div
-                      style={{
-                        marginTop: 10,
-                        paddingTop: 10,
-                        borderTop: "1px solid #232426",
-                        fontSize: 11,
-                        color: "#bec2ff",
-                      }}
-                    >
-                      → Use the <strong>BYOK Manager</strong> below to add your API key
+
+                  {/* Fix proposal actions */}
+                  {msg.fixProposal && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #232426", display: "flex", alignItems: "center", gap: 8 }}>
+                      <button
+                        onClick={() => copyFixedCode(msg.fixProposal!.fixedCode)}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px",
+                          background: "#5E6BFF18", border: "1px solid #5E6BFF30", borderRadius: 2,
+                          color: "#bec2ff", fontSize: 11, cursor: "pointer", fontFamily: "'Inter', monospace",
+                        }}
+                      >
+                        {copiedCode ? <Check style={{ width: 12, height: 12 }} /> : <Copy style={{ width: 12, height: 12 }} />}
+                        {copiedCode ? "Copied!" : "Copy Fixed Code"}
+                      </button>
+                      <span style={{ fontSize: 10, color: "#9A9DA3" }}>
+                        Score: {msg.fixProposal.score}/100 — {msg.fixProposal.recommendation.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Awaiting fix confirmation */}
+                  {msg.awaitingFixConfirmation && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #232426", display: "flex", gap: 8 }}>
+                      <button
+                        onClick={() => { setInput("fix it"); setTimeout(() => sendMessage(), 100); }}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px",
+                          background: "#5E6BFF", border: "none", borderRadius: 2,
+                          color: "#070708", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                        }}
+                      >
+                        <Zap style={{ width: 12, height: 12 }} /> SORK Fix
+                      </button>
+                      <button
+                        onClick={() => { setInput("I'll fix it myself"); setTimeout(() => sendMessage(), 100); }}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px",
+                          background: "transparent", border: "1px solid #232426", borderRadius: 2,
+                          color: "#9A9DA3", fontSize: 11, cursor: "pointer",
+                        }}
+                      >
+                        I'll fix it
+                      </button>
                     </div>
                   )}
                 </div>
@@ -475,48 +539,45 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
           ))}
         </AnimatePresence>
 
+        {/* Active agent steps while loading */}
         {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{ display: "flex", gap: 12, alignItems: "center" }}
-          >
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                border: "1px solid #5E6BFF30",
-                backgroundColor: "#5E6BFF18",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: "flex", gap: 12 }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", border: "1px solid #5E6BFF30", backgroundColor: "#5E6BFF18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Bot style={{ width: 14, height: 14, color: "#5E6BFF" }} />
             </div>
-            <div
-              style={{
-                background: "#0e0e0f",
-                border: "1px solid #232426",
-                borderRadius: 4,
-                padding: "10px 16px",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <div style={{ display: "flex", gap: 4 }}>
-                {[0, 1, 2].map(i => (
-                  <motion.div
-                    key={i}
-                    style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#5E6BFF" }}
-                    animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                  />
-                ))}
-              </div>
-              <span style={{ fontSize: 12, color: "#9A9DA3" }}>SORK is analyzing...</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {activeSteps.length > 0 ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {activeSteps.map((step, si) => {
+                    const tierInfo = TIER_LABELS[step.tier] ?? TIER_LABELS.fast;
+                    const TierIcon = tierInfo.icon;
+                    return (
+                      <motion.span key={si} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px",
+                          backgroundColor: "rgba(94,107,255,0.06)", border: "1px solid rgba(94,107,255,0.15)",
+                          borderRadius: 999, fontSize: 10, color: tierInfo.color,
+                        }}>
+                        <TierIcon style={{ width: 10, height: 10 }} />
+                        {AGENT_LABELS[step.agent] ?? step.agent}
+                        {step.durationMs != null && <span style={{ color: "#9A9DA3", fontSize: 9 }}>{step.durationMs}ms</span>}
+                        {step.status === "done" && <CheckCircle2 style={{ width: 9, height: 9, color: "#a8e6cf" }} />}
+                      </motion.span>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ background: "#0e0e0f", border: "1px solid #232426", borderRadius: 4, padding: "10px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {[0, 1, 2].map(i => (
+                      <motion.div key={i} style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#5E6BFF" }}
+                        animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }} />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 12, color: "#9A9DA3" }}>SORK is analyzing...</span>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -526,42 +587,15 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
       {/* Attachment chips */}
       <AnimatePresence>
         {attachments.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            style={{
-              padding: "8px 20px",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 6,
-              borderTop: "1px solid #1B1C1E",
-            }}
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            style={{ padding: "8px 20px", display: "flex", flexWrap: "wrap", gap: 6, borderTop: "1px solid #1B1C1E" }}>
             {attachments.map(a => (
-              <motion.span
-                key={a.name}
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "4px 10px",
-                  backgroundColor: "#5E6BFF18",
-                  border: "1px solid #5E6BFF30",
-                  borderRadius: 999,
-                  fontSize: 11,
-                  color: "#bec2ff",
-                }}
-              >
-                <FileCode style={{ width: 12, height: 12 }} />
-                @{a.name}
+              <motion.span key={a.name} initial={{ scale: 0.9 }} animate={{ scale: 1 }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", backgroundColor: "#5E6BFF18", border: "1px solid #5E6BFF30", borderRadius: 999, fontSize: 11, color: "#bec2ff" }}>
+                <FileCode style={{ width: 12, height: 12 }} />@{a.name}
                 <span style={{ color: "#5E6BFF60", fontFamily: "'Inter', monospace" }}>{(a.size / 1024).toFixed(1)}KB</span>
-                <button
-                  onClick={() => setAttachments(p => p.filter(x => x.name !== a.name))}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ffb4ab", display: "flex", alignItems: "center", marginLeft: 2 }}
-                >
+                <button onClick={() => setAttachments(p => p.filter(x => x.name !== a.name))}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ffb4ab", display: "flex", alignItems: "center", marginLeft: 2 }}>
                   <X style={{ width: 10, height: 10 }} />
                 </button>
               </motion.span>
@@ -571,180 +605,48 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
       </AnimatePresence>
 
       {/* Input bar */}
-      <div
-        style={{
-          borderTop: "1px solid #1B1C1E",
-          background: "#0e0e0f",
-          padding: "12px 16px",
-        }}
-      >
+      <div style={{ borderTop: "1px solid #1B1C1E", background: "#0e0e0f", padding: "12px 16px" }}>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-          {/* Left icon buttons */}
           <div style={{ display: "flex", gap: 4, flexShrink: 0, paddingBottom: 4 }}>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
-                border: "1px solid #1B1C1E",
-                background: "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                color: "#9A9DA3",
-              }}
-              title="Attach file"
-            >
+            <button onClick={() => fileInputRef.current?.click()}
+              style={{ width: 32, height: 32, borderRadius: 2, border: "1px solid #1B1C1E", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#9A9DA3" }}
+              title="Attach file">
               <Paperclip style={{ width: 14, height: 14 }} />
             </button>
-            <button
-              onClick={openRepoPicker}
-              style={{
-                width: 32, height: 32, borderRadius: 2,
-                border: "1px solid #1B1C1E", background: "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: "#9A9DA3", transition: "all 0.15s",
-              }}
+            <button onClick={openRepoPicker}
+              style={{ width: 32, height: 32, borderRadius: 2, border: "1px solid #1B1C1E", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#9A9DA3", transition: "all 0.15s" }}
               onMouseEnter={e => { e.currentTarget.style.color = "#bec2ff"; e.currentTarget.style.borderColor = "#454655"; }}
               onMouseLeave={e => { e.currentTarget.style.color = "#9A9DA3"; e.currentTarget.style.borderColor = "#1B1C1E"; }}
-              title="Scan a GitHub repository"
-            >
+              title="Scan a GitHub repository">
               <Github style={{ width: 14, height: 14 }} />
-            </button>
-            <button
-              onClick={() => setSettingsOpen(v => !v)}
-              style={{
-                width: 32, height: 32, borderRadius: 2,
-                border: `1px solid ${settingsOpen ? "#5E6BFF" : "#1B1C1E"}`,
-                background: settingsOpen ? "rgba(94,107,255,0.08)" : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: settingsOpen ? "#bec2ff" : "#9A9DA3", transition: "all 0.15s",
-              }}
-              title="Model & settings"
-            >
-              <Settings2 style={{ width: 14, height: 14 }} />
             </button>
           </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept={SUPPORTED_EXTS.join(",")}
-            style={{ display: "none" }}
-            onChange={e => e.target.files && handleFiles(e.target.files)}
-          />
+          <input ref={fileInputRef} type="file" multiple accept={SUPPORTED_EXTS.join(",")} style={{ display: "none" }}
+            onChange={e => e.target.files && handleFiles(e.target.files)} />
 
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder={attachments.length > 0 ? "Ask SORK to scan the attached files..." : "Ask SORK • search project files..."}
+          <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
+            placeholder={attachments.length > 0 ? "Ask SORK to scan the attached files..." : "Ask SORK anything about security..."}
             rows={1}
-            style={{
-              flex: 1,
-              background: "#0a0a0b",
-              border: "1px solid #1B1C1E",
-              borderRadius: 2,
-              padding: "8px 12px",
-              fontSize: 13,
-              color: "#e5e2e3",
-              outline: "none",
-              resize: "none",
-              fontFamily: "inherit",
-            }}
-          />
+            style={{ flex: 1, background: "#0a0a0b", border: "1px solid #1B1C1E", borderRadius: 2, padding: "8px 12px", fontSize: 13, color: "#e5e2e3", outline: "none", resize: "none", fontFamily: "inherit" }} />
 
-          <button
-            onClick={sendMessage}
-            disabled={loading || !input.trim()}
+          <button onClick={sendMessage} disabled={loading || !input.trim()}
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 2,
-              background: "#5E6BFF",
-              border: "none",
+              width: 36, height: 36, borderRadius: 2, background: "#5E6BFF", border: "none",
               cursor: loading || !input.trim() ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              alignSelf: "flex-end",
-              opacity: loading || !input.trim() ? 0.3 : 1,
-              transition: "opacity 0.15s ease",
-            }}
-          >
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, alignSelf: "flex-end",
+              opacity: loading || !input.trim() ? 0.3 : 1, transition: "opacity 0.15s ease",
+            }}>
             <Send style={{ width: 14, height: 14, color: "#070708" }} />
           </button>
         </div>
 
-        {/* Footer tip */}
-        <p
-          style={{
-            fontSize: 11,
-            color: "#9A9DA3",
-            opacity: 0.5,
-            textAlign: "center",
-            marginTop: 10,
-            lineHeight: 1.6,
-          }}
-        >
-          Tip: Run{" "}
-          <code
-            style={{
-              background: "#1B1C1E",
-              border: "1px solid #232426",
-              borderRadius: 2,
-              padding: "0 4px",
-              color: "#bec2ff",
-              fontFamily: "'Inter', monospace",
-            }}
-          >
-            sork send ./file.ts
-          </code>
-          {" "}from your terminal to send any file directly into this chat.
+        <p style={{ fontSize: 11, color: "#9A9DA3", opacity: 0.5, textAlign: "center", marginTop: 10, lineHeight: 1.6 }}>
+          SORK Engine — multi-tier security analysis with RAG memory
         </p>
       </div>
 
-      {/* ── Settings popover ── */}
-      {settingsOpen && (
-        <div style={{
-          position: "absolute", bottom: 60, right: 90, width: 280,
-          background: "#0e0e0f", border: "1px solid #232426", borderRadius: 4,
-          padding: 14, zIndex: 100, boxShadow: "0 12px 32px rgba(0,0,0,0.7)",
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 13, color: "#e5e2e3" }}>Settings</span>
-            <button onClick={() => setSettingsOpen(false)} style={{ background: "transparent", border: "none", color: "#9A9DA3", cursor: "pointer", fontSize: 16 }}>×</button>
-          </div>
-          <div style={{ fontFamily: "'Inter', monospace", fontSize: 10, color: "#9A9DA3", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Active model</div>
-          <div style={{ fontFamily: "'Inter', monospace", fontSize: 12, color: "#50d8e9", marginBottom: 14, padding: "6px 10px", background: "rgba(80,216,233,0.06)", border: "1px solid rgba(80,216,233,0.2)", borderRadius: 2 }}>
-            {activeModel}
-          </div>
-          <div style={{ fontFamily: "'Inter', monospace", fontSize: 10, color: "#9A9DA3", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Switch model</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {[
-              { id: "llama-3.3-70b-versatile", label: "llama-3.3-70b (best)" },
-              { id: "llama-3.1-8b-instant",   label: "llama-3.1-8b (fastest)" },
-              { id: "mixtral-8x7b-32768",      label: "mixtral-8x7b" },
-            ].map(m => (
-              <button key={m.id}
-                onClick={() => { setInput(`use ${m.id}`); setSettingsOpen(false); textareaRef.current?.focus(); }}
-                style={{ textAlign: "left", padding: "6px 10px", background: m.id === activeModel ? "#1c1b1d" : "transparent",
-                  border: `1px solid ${m.id === activeModel ? "#454655" : "#1B1C1E"}`, borderRadius: 2,
-                  color: m.id === activeModel ? "#bec2ff" : "#c6c5d8", fontSize: 11,
-                  fontFamily: "'Inter', monospace", cursor: "pointer" }}>
-                {m.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Repo picker modal ── */}
+      {/* Repo picker modal */}
       {repoPickerOpen && (
         <div onClick={() => setRepoPickerOpen(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, backdropFilter: "blur(4px)" }}>
@@ -755,10 +657,10 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
                 <Github style={{ width: 16, height: 16, color: "#bec2ff" }} />
                 <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 14, color: "#e5e2e3" }}>Scan a Repository</span>
               </div>
-              <button onClick={() => setRepoPickerOpen(false)} style={{ background: "transparent", border: "none", color: "#9A9DA3", cursor: "pointer", fontSize: 18 }}>×</button>
+              <button onClick={() => setRepoPickerOpen(false)} style={{ background: "transparent", border: "none", color: "#9A9DA3", cursor: "pointer", fontSize: 18 }}>x</button>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
-              {reposLoading && <div style={{ padding: 20, textAlign: "center", fontFamily: "'Inter', monospace", fontSize: 12, color: "#9A9DA3" }}>Loading repositories…</div>}
+              {reposLoading && <div style={{ padding: 20, textAlign: "center", fontFamily: "'Inter', monospace", fontSize: 12, color: "#9A9DA3" }}>Loading repositories...</div>}
               {!reposLoading && !ghConnected && (
                 <div style={{ padding: 28, textAlign: "center" }}>
                   <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 14, color: "#e5e2e3", marginBottom: 8 }}>GitHub not connected</div>
