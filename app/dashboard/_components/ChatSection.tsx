@@ -10,6 +10,7 @@ import {
 import { apiPost, apiGet } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import CodeDiffEditor from "@/components/CodeDiffEditor";
 
 interface Message {
   role: "user" | "assistant";
@@ -488,24 +489,17 @@ export default function ChatSection({ clerkId, preloadedFile }: Props) {
                     </p>
                   )}
 
-                  {/* Fix proposal actions */}
+                  {/* Interactive diff editor for fix proposals */}
                   {msg.fixProposal && (
-                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #232426", display: "flex", alignItems: "center", gap: 8 }}>
-                      <button
-                        onClick={() => copyFixedCode(msg.fixProposal!.fixedCode)}
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px",
-                          background: "#5E6BFF18", border: "1px solid #5E6BFF30", borderRadius: 2,
-                          color: "#bec2ff", fontSize: 11, cursor: "pointer", fontFamily: "'Inter', monospace",
-                        }}
-                      >
-                        {copiedCode ? <Check style={{ width: 12, height: 12 }} /> : <Copy style={{ width: 12, height: 12 }} />}
-                        {copiedCode ? "Copied!" : "Copy Fixed Code"}
-                      </button>
-                      <span style={{ fontSize: 10, color: "#9A9DA3" }}>
-                        Score: {msg.fixProposal.score}/100 — {msg.fixProposal.recommendation.toUpperCase()}
-                      </span>
-                    </div>
+                    <CodeDiffEditor
+                      originalCode={msg.fixProposal.originalCode}
+                      fixedCode={msg.fixProposal.fixedCode}
+                      changes={msg.fixProposal.changes}
+                      explanation={msg.fixProposal.explanation}
+                      score={msg.fixProposal.score}
+                      recommendation={msg.fixProposal.recommendation}
+                      onApply={(code) => copyFixedCode(code)}
+                    />
                   )}
 
                   {/* Awaiting fix confirmation */}
